@@ -8,6 +8,9 @@ model_obj = sim_server.Model()
 
 def main():
     for site_obj in model_obj.sites:
-        for product_obj in site_obj.products:
-            debug_obj.trace(1,'%s,%s,%s,%s' % (sim_server.NowAsString(), site_obj.name,
-                                               product_obj.product.name,product_obj.inventory))
+        for site_product_obj in site_obj.products:
+            daily_inventory = model_obj.getcustomattribute('daily_inventory')
+            daily_inventory.append(
+                [sim_server.NowAsString(), site_product_obj.site.name, site_product_obj.product.name,
+                 site_product_obj.inventory])
+            model_obj.setcustomattribute('daily_inventory', daily_inventory)

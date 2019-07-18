@@ -24,7 +24,15 @@ def main():
     # set custom attributes on the model object
     model_obj.setcustomattribute('daily_inventory', [])  # a container for inventory information
     model_obj.setcustomattribute('validation_data', [])
-    model_obj.setcustomattribute('write_daily_inventory', True)
+    model_obj.setcustomattribute('write_daily_inventory', False)
+    model_obj.setcustomattribute('write_validation', False)
+
+    # read and apply model level custom attributes
+    if 1 == 1:  # TODO: convert to global variable lookup
+        model_obj.setcustomattribute('write_daily_inventory', True)
+
+    if 1 == 2:  # TODO: convert to global variable lookup
+        model_obj.setcustomattribute('write_daily_inventory', True)
 
     # set custom attributes on each site-product
     for site_obj in model_obj.sites:
