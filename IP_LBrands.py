@@ -2,6 +2,7 @@ import sys
 import sim_server
 import utilities_LBrands
 import datetime
+import math
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
 
 
@@ -33,12 +34,17 @@ def main(site_obj, product_obj, order_quantity):
     due_in = site_product_obj.currentorderquantity
     due_out = site_product_obj.backorderquantity
     lead_time = float(site_product_obj.getcustomattribute('lead_time'))
+    lt_values = [lead_time]  # If we want the model to calculate 'real', we will need to capture those values
+    lead_time_mean = utilities_LBrands.list_mean(lt_values)
+    lead_time_stddev = utilities_LBrands.list_stddev(lt_values)
     forecast_offset = lead_time
     end_state_probability = site_product_obj.getcustomattribute('end_state_probability')
     forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
+    lead_time_demand_values = get_lead_time_demand(site_name, product_name, current_date_dt, lead_time)
+    lead_time_demand_sum = sum(lead_time_demand_values)
     lt_forecast_values = get_lead_time_forecast(site_name, product_name, current_date_dt, forecast_offset, lead_time)
     lt_forecast_sum = sum(lt_forecast_values)
-    lt_forecast_mean = sum(lt_forecast_values) / len(lt_forecast_values)
+    lt_forecast_mean = utilities_LBrands.list_mean(lt_forecast_values)
     lt_forecast_stddev = utilities_LBrands.list_stddev(lt_forecast_values)
     rem_forecast_values = get_remaining_forecast(site_name, product_name, current_date_dt)
     rem_forecast_sum = sum(rem_forecast_values)
@@ -55,24 +61,70 @@ def main(site_obj, product_obj, order_quantity):
 
     # compute the reorder point using standard safety stock formula. Inputs: forecast, lead time
     #   Round answer to nearest integer
+    z = 1.64485  # TODO: find a way to calculate z from service level probability
+    ss_raw = z * math.sqrt((lead_time_mean * lt_forecast_stddev**2) + (lt_forecast_mean * lead_time_stddev)**2)
+    reorder_point = round(ss_raw)
+    debug_obj.trace(1,'DELETE ss1 %s, reorder point %s' % (ss_raw, reorder_point))
+
     # compute the order up to level (max) as sum of forecasted demand during lead time
-    #   wed ... lead time 7 day.  offset of lead of lead time / forecast over 7 days from offset
     #   Round answer to ceiling integer
+    order_up_to = math.ceil(lt_forecast_sum)
+    debug_obj.trace(1,'DELETE lt sum %s, order up to %s' % (lt_forecast_sum, order_up_to))
     # calculate future inventory position. Inputs: on hand, due-in, due-out, current date,
     #    forecast over lead time
-    # calculate the total remaining forecast quantity over the remainder of the horison. Inputs: current date, forecast
+    basic_inventory_position = on_hand + due_in - due_out
+    sim_inventor_position = site_product_obj.inventoryposition
+    ck = (basic_inventory_position == sim_inventor_position)
+    inventory_position = on_hand + due_in - due_out - lead_time_demand_sum
+    debug_obj.trace(1,'DELETE basic ip %s, sim ip %s, NoDiff: %s, Lbrands ip %s'
+                    % (basic_inventory_position, sim_inventor_position, ck, inventory_position ))
+
+    # calculate the total remaining forecast quantity over the remainder of the horizon. Inputs: current date, forecast
+    remaining_gt_end_prob = rem_forecast_sum > end_state_probability
+    debug_obj.trace(1,'DELETE rem sum, end state, ck %s, %s, %s' % (rem_forecast_sum, end_state_probability,
+                                                                    remaining_gt_end_prob))
+
     # replenish decision: if inventory position <= min (calc'ed reorder point) AND
     #    total remaining forecast > end state probability OR max (calculated reorder up to) then
     #    trigger replenshiment
     # if replenishment triggered, calc replenishment order: max - inventory position
+    replenish_order = False
+    ck1 = (inventory_position <= reorder_point)
+    ck2 = (rem_forecast_sum > end_state_probability)
+    ck3 = (rem_forecast_sum > reorder_point)
+    debug_obj.trace(1,'DELETE %s, %s, %s ' % (ck1, ck2, ck3))
+    if inventory_position <= reorder_point:
+        if rem_forecast_sum > end_state_probability:
+            debug_obj.trace(1,'CREATE AN ORDER 1')
+            replenish_order = True
+        elif rem_forecast_sum > reorder_point:
+            debug_obj.trace(1,'CREATE AN ORDER 2')
+            replenish_order = True
 
-    validation_data_list = [sim_server.NowAsString(),site_name, product_name, on_hand, due_in, due_out, lead_time,
-                            forecast_offset, end_state_probability, lt_forecast_sum, lt_forecast_mean,
-                            lt_forecast_stddev, rem_forecast_sum]
-    record_validation(validation_data_list)
+    if replenish_order == True:
+        replenishment_quantity = float(reorder_point - inventory_position)
+        replenishment_quantity = math.ceil(replenishment_quantity)
+        debug_obj.trace(high, '  Need replenishment: % units of %s for %s'
+                        % (replenishment_quantity, product_name, site_name))
+        new_order = sim_server.CreateOrder(product_name, replenishment_quantity, site_name)
+        if new_order is not None:
+            debug_obj.trace(high, ' Replenishment order of %s units placed' % replenishment_quantity)
+        else:
+            debug_obj.trace(1, ' Replenishment order failed for %s %s at %s'
+                            % (site_obj.name, product_obj.name, sim_server.NowAsString()))
+            # debug_obj.errorlog('Replenishment order failed for %s %s at %s'                       SCGX only
+            #                    % (site_obj.name, product_obj.name, sim_server.NowAsString()))
+    else:
+        debug_obj.trace(high, ' No replenishment required at this time')
 
-    # TODO: Remove this when IP policy is complete
-    main_ss(site_obj,product_obj,order_quantity)
+    # if we are writing validation data, record it here
+    write_validation_bool = model_obj.getcustomattribute('write_validation')
+    if write_validation_bool is True:
+        validation_data_list = [sim_server.NowAsString(),site_name, product_name, on_hand, due_in, due_out, lead_time,
+                                forecast_offset, end_state_probability, lt_forecast_sum, lt_forecast_mean,
+                                lt_forecast_stddev, rem_forecast_sum, ss_raw, reorder_point, order_up_to]
+        record_validation(validation_data_list)
+
 
 
 def get_lead_time_forecast(site_name, product_name, start_date, offset, lead_time):
@@ -82,6 +134,10 @@ def get_lead_time_forecast(site_name, product_name, start_date, offset, lead_tim
 
 def get_remaining_forecast(site_name, product_name, start_date):
     return utilities_LBrands.get_forecast_values(site_name, product_name, start_date, 9999.0)
+
+
+def get_lead_time_demand(site_name, product_name, start_date, forecast_window):
+    return utilities_LBrands.get_forecast_values(site_name, product_name, start_date, forecast_window)
 
 
 def main_ss(site_obj, product_obj, order_quantity):
@@ -108,11 +164,11 @@ def main_ss(site_obj, product_obj, order_quantity):
         debug_obj.trace(high, '  Need replenishment: % units of %s for %s'
                         % (replenishment_quantity, product_obj.name, site_obj.name))
         new_order = sim_server.CreateOrder(product_obj.name, replenishment_quantity, site_obj.name)
-        debug_obj.trace(1, 'DELETE  new order bool = %s' % new_order)
         if new_order is not None:
             debug_obj.trace(low, ' Replenishment order of %s units placed' % replenishment_quantity)
         else:
-            debug_obj.trace(low, ' Replenishment order failed')
+            debug_obj.trace(1, ' Replenishment order failed for %s %s at %s'
+                            % (site_obj.name, product_obj.name, sim_server.NowAsString()))
             # debug_obj.errorlog('Replenishment order failed for %s %s at %s'                       SCGX only
             #                    % (site_obj.name, product_obj.name, sim_server.NowAsString()))
     else:
