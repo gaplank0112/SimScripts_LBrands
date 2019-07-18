@@ -8,18 +8,22 @@ debug_obj = sim_server.Debug()
 model_obj = sim_server.Model()
 
 
-def forecast_sum(site_name, product_name, start_date, forecast_window):
-    # debug_obj.trace(high, 'Sum forecast utility called at %s' % sim_server.NowAsString())
+def list_stddev(data_list):
+    mean = sum(data_list) / len(data_list)
+    st_dev = 0
+    if len(data_list) <= 1:
+        return 0
+    for el in data_list:
+        st_dev += (el - mean)**2
+    st_dev = (st_dev / (len(data_list))) ** .5
+    return st_dev
+
+
+def get_forecast_values(site_name, product_name, start_date, forecast_window):
     # get the site_product
     site_obj = get_site(site_name)
     site_product_obj = site_obj.getsiteproduct(product_name)
 
-    value_list = get_forecast_values(site_product_obj, start_date, forecast_window)
-
-    return sum(value_list)
-
-
-def get_forecast_values(site_product_obj, start_date, forecast_window):
     # calculate the end date as start date + forecast window
     end_date = start_date + datetime.timedelta(days=forecast_window)
 
@@ -46,3 +50,6 @@ def get_site(site_name):
 def get_model_path():
     # TODO: get to the model location
     return "C:\\Users\\greg.plank\\OneDrive - LLamasoft, Inc\\SCG\\Projects\\201907 LBrands\\Models\\ExampleModel\\"
+
+
+

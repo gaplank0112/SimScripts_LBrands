@@ -36,12 +36,22 @@ def main(site_obj, product_obj, order_quantity):
     forecast_offset = lead_time
     end_state_probability = site_product_obj.getcustomattribute('end_state_probability')
     forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
-    lead_time_forecast = sum_lead_time_forecast(site_name, product_name, current_date_dt,
-                                                forecast_offset, lead_time)
-    forecast_remaining = sum_remaining_forecast(site_name, product_name, current_date_dt)
-    debug_obj.trace(1,'DELETE %s, %s, %s, %s, %s, %s, %s, %s, %s, %s'
-                    % (sim_server.NowAsString(), site_name, product_name, on_hand, due_in, due_out, lead_time,
-                       end_state_probability, lead_time_forecast, forecast_remaining))
+    lt_forecast_values = get_lead_time_forecast(site_name, product_name, current_date_dt, forecast_offset, lead_time)
+    lt_forecast_sum = sum(lt_forecast_values)
+    lt_forecast_mean = sum(lt_forecast_values) / len(lt_forecast_values)
+    lt_forecast_stddev = utilities_LBrands.list_stddev(lt_forecast_values)
+    rem_forecast_values = get_remaining_forecast(site_name, product_name, current_date_dt)
+    rem_forecast_sum = sum(rem_forecast_values)
+
+    debug_obj.trace(1,'DELETE %s, %s, %s, %s, %s, %s, %s, %s'
+                    % (current_date_dt, site_name, product_name, on_hand, due_in, due_out, lead_time,
+                       end_state_probability))
+    debug_obj.trace(1,'DELETE lead time forecast %s' % lt_forecast_values)
+    debug_obj.trace(1,'DELETE %s, %s, %s'
+                    % (lt_forecast_sum, lt_forecast_mean, lt_forecast_stddev))
+    debug_obj.trace(1,'DELETE rem forecast %s' % rem_forecast_values)
+    debug_obj.trace(1,'DELETE %s' % rem_forecast_sum)
+
 
     # compute the reorder point using standard safety stock formula. Inputs: forecast, lead time
     #   Round answer to nearest integer
@@ -56,17 +66,22 @@ def main(site_obj, product_obj, order_quantity):
     #    trigger replenshiment
     # if replenishment triggered, calc replenishment order: max - inventory position
 
-    #TODO: Remove this when IP policy is complete
+    validation_data_list = [sim_server.NowAsString(),site_name, product_name, on_hand, due_in, due_out, lead_time,
+                            forecast_offset, end_state_probability, lt_forecast_sum, lt_forecast_mean,
+                            lt_forecast_stddev, rem_forecast_sum]
+    record_validation(validation_data_list)
+
+    # TODO: Remove this when IP policy is complete
     main_ss(site_obj,product_obj,order_quantity)
 
 
-def sum_lead_time_forecast(site_name, product_name, start_date, offset, lead_time):
+def get_lead_time_forecast(site_name, product_name, start_date, offset, lead_time):
     offset_start = start_date + datetime.timedelta(days=offset)
-    return utilities_LBrands.forecast_sum(site_name, product_name, offset_start, lead_time)
+    return utilities_LBrands.get_forecast_values(site_name, product_name, offset_start, lead_time)
 
 
-def sum_remaining_forecast(site_name, product_name, start_date):
-    return utilities_LBrands.forecast_sum(site_name, product_name, start_date, 9999.0)
+def get_remaining_forecast(site_name, product_name, start_date):
+    return utilities_LBrands.get_forecast_values(site_name, product_name, start_date, 9999.0)
 
 
 def main_ss(site_obj, product_obj, order_quantity):
@@ -76,9 +91,6 @@ def main_ss(site_obj, product_obj, order_quantity):
 
     # get the site product object. All the data is on this object
     site_product_obj = site_obj.getsiteproduct(product_obj.name)
-
-    # record the on hand inventory
-    record_on_hand_inventory(site_product_obj)
 
     # change the order quantity to 0.0 if there was no order during this review
     if order_quantity is None:
@@ -97,7 +109,7 @@ def main_ss(site_obj, product_obj, order_quantity):
                         % (replenishment_quantity, product_obj.name, site_obj.name))
         new_order = sim_server.CreateOrder(product_obj.name, replenishment_quantity, site_obj.name)
         debug_obj.trace(1, 'DELETE  new order bool = %s' % new_order)
-        if new_order is True:
+        if new_order is not None:
             debug_obj.trace(low, ' Replenishment order of %s units placed' % replenishment_quantity)
         else:
             debug_obj.trace(low, ' Replenishment order failed')
@@ -113,3 +125,8 @@ def record_on_hand_inventory(site_product_obj):
                             site_product_obj.inventory])
     model_obj.setcustomattribute('daily_inventory', daily_inventory)
 
+
+def record_validation(data_list):
+    validation_data = model_obj.getcustomattribute('validation_data')
+    validation_data.append(data_list)
+    model_obj.setcustomattribute('validation_data', validation_data)

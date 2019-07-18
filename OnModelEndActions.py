@@ -26,7 +26,7 @@ def main():
         write_data(daily_inventory, datafile)
 
     write_validation_bool = model_obj.getcustomattribute('write_validation')
-    if write_validation_bool in True:
+    if write_validation_bool is True:
         validation_data = model_obj.getcustomattribute('validation_data')
         datafile = "C:\\Users\\greg.plank\\OneDrive - LLamasoft, Inc\\SCG\\Projects\\201907 LBrands\\Models\\" \
                    "ExampleModel\\Validation.txt"

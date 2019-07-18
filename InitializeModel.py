@@ -20,14 +20,10 @@ def main():
 
     # read the global variables file.
     global_data = get_gv()
-    debug_obj.trace(1, 'DELETE here 4')
 
     # read and store default service level and end state probability from global variables
     default_end_state_probability = 0.5  # TODO: create method to read from variables table
-    debug_obj.trace(1, 'DELETE here 5')
     default_service_level = 0.95  # TODO: create method to read from variables table
-    debug_obj.trace(1, 'DELETE here 6')
-    debug_obj.trace(1,'DELETE here')
     write_daily_inventory_bool = set_write_inventory_bool()
     write_validation_bool = set_write_validation_bool()
 
@@ -78,20 +74,15 @@ def get_lead_time(site_product_obj):
 def get_gv():
     global_data = []
     data_global_variables = model_obj.modelpath + '\\' + 'GlobalVariable.txt'
-    debug_obj.trace(1,'DELETE here 1')
 
     try:
         global_input = open(data_global_variables)
         csv_t = csv.reader(global_input, delimiter=',')
         for row in csv_t:
             global_data.append(row)
-            debug_obj.trace(1, 'DELETE here 2 %s' % row)
     except IOError:
-        debug_obj.trace(1, 'DELETE here 3')
         debug_obj.trace(1, 'Error: No global variable file. Ensure one line of Global Variable table = '
                            'GV, String, @Table:GlobalVariable, 999999')
-        debug_obj.trace(1, 'Error: No global variable file. Ensure one line of Global Variable table = '
-                           'GV, String, @Table:GlobalVariable, 999999', 'SIMERROR.txt')
         end_run = model_obj.sites('EndModel')  # this effectively 'fails' the sim by trying to access a null object
 
     return global_data
