@@ -20,22 +20,30 @@ def main():
 
     # read the global variables file.
     global_data = get_gv()
+    debug_obj.trace(1, 'DELETE here 4')
 
     # read and store default service level and end state probability from global variables
     default_end_state_probability = 0.5  # TODO: create method to read from variables table
-    default_service_level = 0.95 #TODO: create method to read from variables table
+    debug_obj.trace(1, 'DELETE here 5')
+    default_service_level = 0.95  # TODO: create method to read from variables table
+    debug_obj.trace(1, 'DELETE here 6')
+    debug_obj.trace(1,'DELETE here')
+    write_daily_inventory_bool = set_write_inventory_bool()
+    write_validation_bool = set_write_validation_bool()
+
+
 
     # set custom attributes on the model object
     model_obj.setcustomattribute('daily_inventory', [])  # a container for inventory information
     model_obj.setcustomattribute('validation_data', [])
-    model_obj.setcustomattribute('write_daily_inventory', True)
+    model_obj.setcustomattribute('write_daily_inventory', write_daily_inventory_bool)
+    model_obj.setcustomattribute('write_validation', write_validation_bool)
 
     # set custom attributes on each site-product
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
             site_product_obj.setcustomattribute('forecast_dict', {})
             lead_time = get_lead_time(site_product_obj)
-            debug_obj.trace(1, "DELETE here 4")
             site_product_obj.setcustomattribute('lead_time',lead_time)
             site_product_obj.setcustomattribute('end_state_probability', default_end_state_probability)
             site_product_obj.setcustomattribute('IP_check', True)
@@ -51,32 +59,50 @@ def main():
 
 def get_lead_time(site_product_obj):
     lead_times = []
-    for source_obj in site_product_obj.sources:
-        debug_obj.trace(1,"DELETE here 1")
-        lane_obj = source_obj.transportationlane
-        debug_obj.trace(1,"DELETE here 2")
-        for mode_obj in lane_obj.modes:
-            lead_times.append(mode_obj.transportationtime.valueinseconds)
-            debug_obj.trace(1, "DELETE here 3")
-    return sum(lead_times) / len(lead_times)  # calculated average
+    # TODO: Find a way to get transportation time input
+
+    # for source_obj in site_product_obj.sources:
+    #     debug_obj.trace(1,"DELETE here 1 %s" % source_obj.transportationlane)
+    #     # debug_obj.trace(1,"DELETE here 1 %s" % source_obj.transportationlane.name)
+    #     debug_obj.trace(1,"DELETE here 1 %s" % source_obj.transportationlanename)
+    #     lane_obj = source_obj.transportationlane
+    #     debug_obj.trace(1,"DELETE here 2")
+    #     for mode_obj in lane_obj.modes:
+    #         debug_obj.trace(1,"Mode obj %s " % mode_obj.name)
+    #         # lead_times.append(mode_obj.transportationtime)
+    #         debug_obj.trace(1, "DELETE here 3 time %s" % mode_obj.transportationtime)
+    # return sum(lead_times) / len(lead_times)  # calculated average
+    return 7.0
 
 
 def get_gv():
+    global_data = []
     data_global_variables = model_obj.modelpath + '\\' + 'GlobalVariable.txt'
+    debug_obj.trace(1,'DELETE here 1')
+
     try:
         global_input = open(data_global_variables)
         csv_t = csv.reader(global_input, delimiter=',')
-        global_data = []
         for row in csv_t:
             global_data.append(row)
+            debug_obj.trace(1, 'DELETE here 2 %s' % row)
     except IOError:
+        debug_obj.trace(1, 'DELETE here 3')
         debug_obj.trace(1, 'Error: No global variable file. Ensure one line of Global Variable table = '
                            'GV, String, @Table:GlobalVariable, 999999')
         debug_obj.trace(1, 'Error: No global variable file. Ensure one line of Global Variable table = '
                            'GV, String, @Table:GlobalVariable, 999999', 'SIMERROR.txt')
         end_run = model_obj.sites('EndModel')  # this effectively 'fails' the sim by trying to access a null object
+
     return global_data
 
+
+def set_write_inventory_bool():
+    return True  # TODO: create a method to read bool
+
+
+def set_write_validation_bool():
+    return True  # TODO: create a method to read bool
 
 def get_forecast_path(global_data):
     for a in global_data:
