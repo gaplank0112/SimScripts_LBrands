@@ -21,6 +21,10 @@ def main():
     # read the global variables file.
     global_data = get_gv()
 
+    # read and store default service level and end state probability from global variables
+    default_end_state_probability = 0.5  # TODO: create method to read from variables table
+    default_service_level = 0.95 #TODO: create method to read from variables table
+
     # set custom attributes on the model object
     model_obj.setcustomattribute('daily_inventory', [])  # a container for inventory information
     model_obj.setcustomattribute('validation_data', [])
@@ -30,6 +34,11 @@ def main():
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
             site_product_obj.setcustomattribute('forecast_dict', {})
+            lead_time = get_lead_time(site_product_obj)
+            debug_obj.trace(1, "DELETE here 4")
+            site_product_obj.setcustomattribute('lead_time',lead_time)
+            site_product_obj.setcustomattribute('end_state_probability', default_end_state_probability)
+            site_product_obj.setcustomattribute('IP_check', True)
 
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
     datafile = get_forecast_path(global_data)
@@ -38,6 +47,18 @@ def main():
 
     # read in the parameters file and add custom attributes
     # read the transport time and add as a custom attribute = lead time
+
+
+def get_lead_time(site_product_obj):
+    lead_times = []
+    for source_obj in site_product_obj.sources:
+        debug_obj.trace(1,"DELETE here 1")
+        lane_obj = source_obj.transportationlane
+        debug_obj.trace(1,"DELETE here 2")
+        for mode_obj in lane_obj.modes:
+            lead_times.append(mode_obj.transportationtime.valueinseconds)
+            debug_obj.trace(1, "DELETE here 3")
+    return sum(lead_times) / len(lead_times)  # calculated average
 
 
 def get_gv():
@@ -84,10 +105,8 @@ def apply_forecast(global_forecast_dict):
             try:
                 forecast_dict = global_forecast_dict[site_obj.name][site_product_obj.product.name]
             except:
-                debug_obj.trace(1,'Warning: No forecast for site %s product %s'
-                                % (site_obj.name, site_product_obj.product.name))
-                debug_obj.trace(1,'Warning: No forecast for site %s product %s'
-                                % (site_obj.name, site_product_obj.product.name), 'SIMERROR.txt')
+                # set the inventory check boolean to False because we will skip review of this site-product
+                site_product_obj.setcustomattribute('IP_check',False)
                 forecast_dict = None
 
             if forecast_dict is not None:
