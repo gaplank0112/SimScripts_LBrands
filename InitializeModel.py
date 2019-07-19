@@ -44,12 +44,14 @@ def main():
             site_product_obj.setcustomattribute('IP_check', True)
 
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
-    datafile = get_forecast_path(global_data)
+    datafile = global_variable_dict['Forecast file']
     global_forecast_dict = import_forecast(datafile)
     apply_forecast(global_forecast_dict)
 
     # read in the parameters file and add custom attributes
     # read the transport time and add as a custom attribute = lead time
+
+    debug_obj.trace(low,'Initialize Model complete')
 
 
 def get_lead_time(site_product_obj):
@@ -155,7 +157,6 @@ def import_forecast(datafile):
         product_col = header.index('item_nbr')
         date_col = header.index('start_dt')
         qty_col = header.index('dfu_total_forecast_qty')
-        debug_obj.trace(1, 'DELETE col idx %s, %s, %s, %s' % (site_col, product_col, date_col, qty_col))
 
         # Get the forecast values by row. Table assumed to be in format
         for row in csv_t:

@@ -129,7 +129,6 @@ def main(site_obj, product_obj, order_quantity):
         record_validation(validation_data_list)
 
 
-
 def get_lead_time_forecast(site_name, product_name, start_date, offset, lead_time):
     offset_start = start_date + datetime.timedelta(days=offset)
     return utilities_LBrands.get_forecast_values(site_name, product_name, offset_start, lead_time)
