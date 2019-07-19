@@ -19,15 +19,13 @@ def main():
     debug_obj.trace(low, 'Initialize model called at %s' % sim_server.NowAsString())
 
     # read the global variables file.
-    global_data = get_gv()
+    global_variable_dict = get_gv()
 
     # read and store default service level and end state probability from global variables
-    default_end_state_probability = 0.5  # TODO: create method to read from variables table
-    default_service_level = 0.95  # TODO: create method to read from variables table
-    write_daily_inventory_bool = set_write_inventory_bool()
-    write_validation_bool = set_write_validation_bool()
-
-
+    default_end_state_probability = global_variable_dict['Default EndState Probability']
+    default_service_level = global_variable_dict['Default Service Level']
+    write_daily_inventory_bool = global_variable_dict['Output daily inventory']
+    write_validation_bool = global_variable_dict['Output IP validation']
 
     # set custom attributes on the model object
     model_obj.setcustomattribute('daily_inventory', [])  # a container for inventory information
@@ -42,6 +40,7 @@ def main():
             lead_time = get_lead_time(site_product_obj)
             site_product_obj.setcustomattribute('lead_time',lead_time)
             site_product_obj.setcustomattribute('end_state_probability', default_end_state_probability)
+            site_product_obj.setcustomattribute('service_level', default_service_level)
             site_product_obj.setcustomattribute('IP_check', True)
 
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
@@ -72,28 +71,21 @@ def get_lead_time(site_product_obj):
 
 
 def get_gv():
-    global_data = []
+    global_variable_dict = {}
     data_global_variables = model_obj.modelpath + '\\' + 'GlobalVariable.txt'
 
     try:
         global_input = open(data_global_variables)
         csv_t = csv.reader(global_input, delimiter=',')
         for row in csv_t:
-            global_data.append(row)
+            global_variable_dict[row[1]] = row[3]
     except IOError:
         debug_obj.trace(1, 'Error: No global variable file. Ensure one line of Global Variable table = '
                            'GV, String, @Table:GlobalVariable, 999999')
         end_run = model_obj.sites('EndModel')  # this effectively 'fails' the sim by trying to access a null object
 
-    return global_data
+    return global_variable_dict
 
-
-def set_write_inventory_bool():
-    return True  # TODO: create a method to read bool
-
-
-def set_write_validation_bool():
-    return True  # TODO: create a method to read bool
 
 def get_forecast_path(global_data):
     for a in global_data:
@@ -128,6 +120,26 @@ def apply_forecast(global_forecast_dict):
 
             if forecast_dict is not None:
                 site_product_obj.setcustomattribute('forecast_dict', forecast_dict)
+    return 0
+
+
+def import_end_state_override():
+    # TODO: import end state overrides
+    return 0
+
+
+def apply_end_state_override():
+    # TODO: apply end state overrides
+    return 0
+
+
+def import_service_level_override():
+    # TODO: import service level overrides
+    return 0
+
+
+def apply_service_level_override():
+    # TODO: apply service level overrides
     return 0
 
 
@@ -170,19 +182,6 @@ def import_forecast(datafile):
     return global_forecast_dict
 
 
-''' Scratch bits
-    datafile = "C:\\Users\\greg.plank\\OneDrive - LLamasoft, Inc\\SCG\\Projects\\201907 LBrands\\Models\\" \
-    "ExampleModel\\simulated engineered jun 19_v1 (Converted)_NetSimData\\FacilityHistoricalForecast.txt"
-    forecast_dict = utilities_LBrands.import_forecast(datafile)
-    
-    start_date = dt(2018, 10, 1, 0, 0)
-    end_date = dt(2018, 11, 15, 0, 0)
-    forecast_window = 30
-    site = '0005'
-    product = '23974525'
-    
-    print utilities_LBrands.forecast_sum(site,product,start_date,forecast_window,forecast_dict)
-    '''
 
 
 
