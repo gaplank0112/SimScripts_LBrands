@@ -14,14 +14,12 @@ def main():
 
     # get the daily inventory data. If output set to True, write out data
     write_daily_inventory_bool = model_obj.getcustomattribute('write_daily_inventory')
-    debug_obj.trace(1,'DELETE write daily inventory bool %s' % write_daily_inventory_bool)
     if write_daily_inventory_bool is True:
         daily_inventory = model_obj.getcustomattribute('daily_inventory')
         datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Daily_Inventory.txt'
         write_data(daily_inventory, datafile)
 
     write_validation_bool = model_obj.getcustomattribute('write_validation')
-    debug_obj.trace(1, 'DELETE write validation bool %s' % write_validation_bool)
     if write_validation_bool is True:
         validation_data = model_obj.getcustomattribute('validation_data')
         datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Validation.txt'

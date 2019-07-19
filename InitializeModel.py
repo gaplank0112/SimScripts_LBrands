@@ -48,7 +48,6 @@ def main():
     datafile = global_variable_dict['FORECAST FILE']
     global_forecast_dict = import_forecast(datafile)
     apply_forecast(global_forecast_dict)
-
     # read in the parameters file and add custom attributes
     # read the transport time and add as a custom attribute = lead time
 
@@ -64,21 +63,25 @@ def get_model_folder():
 
 
 def get_lead_time(site_product_obj):
-    lead_times = []
-    # TODO: Find a way to get transportation time input
+    # this only works for locations that are not make sites. We will need something else for them
+    if site_product_obj.sourcingpolicy >= 12:
+        return 0.0
 
-    # for source_obj in site_product_obj.sources:
-    #     debug_obj.trace(1,"DELETE here 1 %s" % source_obj.transportationlane)
-    #     # debug_obj.trace(1,"DELETE here 1 %s" % source_obj.transportationlane.name)
-    #     debug_obj.trace(1,"DELETE here 1 %s" % source_obj.transportationlanename)
-    #     lane_obj = source_obj.transportationlane
-    #     debug_obj.trace(1,"DELETE here 2")
-    #     for mode_obj in lane_obj.modes:
-    #         debug_obj.trace(1,"Mode obj %s " % mode_obj.name)
-    #         # lead_times.append(mode_obj.transportationtime)
-    #         debug_obj.trace(1, "DELETE here 3 time %s" % mode_obj.transportationtime)
-    # return sum(lead_times) / len(lead_times)  # calculated average
-    return 7.0
+    lead_times = []
+    for source_obj in site_product_obj.sources:
+        source_name = source_obj.sourcesite.name
+        destination_name = site_product_obj.site.name
+        for lane_obj in model_obj.lanes:
+            if lane_obj.source.name == source_name:
+                if lane_obj.destination.name == destination_name:
+                    if lane_obj.modes is not None:
+                        for mode_obj in lane_obj.modes:
+                            lead_times.append(mode_obj.transportationtime.valueinseconds)
+
+    if len(lead_times) == 0:
+        return 0.0
+    else:
+        return (sum(lead_times) / len(lead_times)) / 86400.0  # calculated average in days
 
 
 def get_gv():
