@@ -9,14 +9,20 @@ model_obj = sim_server.Model()
 
 
 def list_stddev(data_list):
-    mean = sum(data_list) / len(data_list)
     st_dev = 0
     if len(data_list) <= 1:
         return 0
+    mean = sum(data_list) / len(data_list)
     for el in data_list:
         st_dev += (el - mean)**2
     st_dev = (st_dev / (len(data_list))) ** .5
     return st_dev
+
+
+def list_mean(data_list):
+    if len(data_list) == 0:
+        return 0
+    return sum(data_list) / len(data_list)
 
 
 def get_forecast_values(site_name, product_name, start_date, forecast_window):
