@@ -21,6 +21,7 @@ def main():
 
     write_validation_bool = model_obj.getcustomattribute('write_validation')
     if write_validation_bool is True:
+        # TODO: Add headers arg
         validation_data = model_obj.getcustomattribute('validation_data')
         datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Validation.txt'
         write_data(validation_data, datafile)

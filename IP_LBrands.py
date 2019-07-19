@@ -41,15 +41,16 @@ def main(site_obj, product_obj, order_quantity):
     forecast_offset = lead_time
     end_state_probability = site_product_obj.getcustomattribute('end_state_probability')
 
-    lt_forecast_demand_values = get_lead_time_demand(site_name, product_name, current_date_dt, lead_time)
-    lt_forecast_demand_sum = sum(lt_forecast_demand_values)
+    lt_demand_values = utilities_LBrands.get_forecast_values(site_name, product_name, current_date_dt, lead_time)
+    lt_forecast_demand_sum = sum(lt_demand_values)
 
-    lt_forecast_values = get_lead_time_forecast(site_name, product_name, current_date_dt, forecast_offset, lead_time)
+    offset_start = current_date_dt + datetime.timedelta(days=forecast_offset)
+    lt_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name, offset_start, lead_time)
     lt_forecast_sum = sum(lt_forecast_values)
     lt_forecast_mean = utilities_LBrands.list_mean(lt_forecast_values)
     lt_forecast_stddev = utilities_LBrands.list_stddev(lt_forecast_values)
 
-    rem_forecast_values = get_remaining_forecast(site_name, product_name, current_date_dt)
+    rem_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name, current_date_dt, 9999.0)
     rem_forecast_sum = sum(rem_forecast_values)
     rem_forecast_mean = utilities_LBrands.list_mean(rem_forecast_values)
     rem_forecast_stddev = utilities_LBrands.list_stddev(rem_forecast_values)
@@ -100,19 +101,6 @@ def main(site_obj, product_obj, order_quantity):
                                 rem_forecast_mean, rem_forecast_stddev, z, ss_raw, reorder_point, lt_forecast_sum,
                                 order_up_to, replenish_order, replenishment_quantity]
         record_validation(validation_data_list)
-
-
-def get_lead_time_forecast(site_name, product_name, start_date, offset, lead_time):
-    offset_start = start_date + datetime.timedelta(days=offset)
-    return utilities_LBrands.get_forecast_values(site_name, product_name, offset_start, lead_time)
-
-
-def get_remaining_forecast(site_name, product_name, start_date):
-    return utilities_LBrands.get_forecast_values(site_name, product_name, start_date, 9999.0)
-
-
-def get_lead_time_demand(site_name, product_name, start_date, forecast_window):
-    return utilities_LBrands.get_forecast_values(site_name, product_name, start_date, forecast_window)
 
 
 def record_on_hand_inventory(site_product_obj):
