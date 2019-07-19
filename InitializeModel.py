@@ -22,10 +22,10 @@ def main():
     global_variable_dict = get_gv()
 
     # read and store default service level and end state probability from global variables
-    default_end_state_probability = global_variable_dict['Default EndState Probability']
-    default_service_level = global_variable_dict['Default Service Level']
-    write_daily_inventory_bool = global_variable_dict['Output daily inventory']
-    write_validation_bool = global_variable_dict['Output IP validation']
+    default_end_state_probability = global_variable_dict['DEFAULT ENDSTATE PROBABILITY']
+    default_service_level = global_variable_dict['DEFAULT SERVICE LEVEL']
+    write_daily_inventory_bool = global_variable_dict['OUTPUT DAILY INVENTORY']
+    write_validation_bool = global_variable_dict['OUTPUT IP VALIDATION']
 
     # set custom attributes on the model object
     model_obj.setcustomattribute('daily_inventory', [])  # a container for inventory information
@@ -44,7 +44,7 @@ def main():
             site_product_obj.setcustomattribute('IP_check', True)
 
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
-    datafile = global_variable_dict['Forecast file']
+    datafile = global_variable_dict['FORECAST FILE']
     global_forecast_dict = import_forecast(datafile)
     apply_forecast(global_forecast_dict)
 
@@ -80,7 +80,7 @@ def get_gv():
         global_input = open(data_global_variables)
         csv_t = csv.reader(global_input, delimiter=',')
         for row in csv_t:
-            global_variable_dict[row[1]] = row[3]
+            global_variable_dict[row[1].upper()] = row[3]
     except IOError:
         debug_obj.trace(1, 'Error: No global variable file. Ensure one line of Global Variable table = '
                            'GV, String, @Table:GlobalVariable, 999999')
