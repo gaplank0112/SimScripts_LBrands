@@ -24,7 +24,8 @@ def main(site_obj, product_obj, order_quantity):
         return
 
     # record the site, product, datetime, on hand inventory for daily output
-    record_on_hand_inventory(site_product_obj)
+    if model_obj.getcustomattribute('write_daily_inventory') is True:
+        record_on_hand_inventory(site_product_obj)
 
     # record the parameters for validation output
     current_date_dt = datetime.datetime.utcfromtimestamp(sim_server.Now())

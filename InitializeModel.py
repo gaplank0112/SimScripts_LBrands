@@ -24,14 +24,15 @@ def main():
     # read and store default service level and end state probability from global variables
     default_end_state_probability = global_variable_dict['DEFAULT ENDSTATE PROBABILITY']
     default_service_level = global_variable_dict['DEFAULT SERVICE LEVEL']
-    write_daily_inventory_bool = global_variable_dict['OUTPUT DAILY INVENTORY']
-    write_validation_bool = global_variable_dict['OUTPUT IP VALIDATION']
+    write_daily_inventory_bool = bool(global_variable_dict['OUTPUT DAILY INVENTORY'])
+    write_validation_bool = bool(global_variable_dict['OUTPUT IP VALIDATION'])
 
     # set custom attributes on the model object
     model_obj.setcustomattribute('daily_inventory', [])  # a container for inventory information
     model_obj.setcustomattribute('validation_data', [])
     model_obj.setcustomattribute('write_daily_inventory', write_daily_inventory_bool)
     model_obj.setcustomattribute('write_validation', write_validation_bool)
+    model_obj.setcustomattribute('model_folder', get_model_folder())
 
     # set custom attributes on each site-product
     for site_obj in model_obj.sites:
@@ -52,6 +53,14 @@ def main():
     # read the transport time and add as a custom attribute = lead time
 
     debug_obj.trace(low,'Initialize Model complete')
+
+
+def get_model_folder():
+    input_data = model_obj.modelpath
+    for i in range(2):
+        a = input_data.rfind('\\')
+        input_data = input_data[:a]
+    return input_data
 
 
 def get_lead_time(site_product_obj):
