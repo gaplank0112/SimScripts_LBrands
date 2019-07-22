@@ -34,3 +34,5 @@ def write_data(data_list, target_file):
         for list_element in data_list:
             writer.writerow(list_element)
 
+# TODO: Add an export of model_obj custom attribute log_error
+
