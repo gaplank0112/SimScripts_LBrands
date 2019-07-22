@@ -58,4 +58,9 @@ def get_model_path():
     return "C:\\Users\\greg.plank\\OneDrive - LLamasoft, Inc\\SCG\\Projects\\201907 LBrands\\Models\\ExampleModel\\"
 
 
+def log_error(error_string):
+    log_error = model_obj.getcustomattribute('log_error')
+    log_error.append([0,1,1,error_string])
+    model_obj.setcustomattribute('log_error',log_error)
+
 

@@ -104,9 +104,11 @@ def get_gv():
         csv_t = csv.reader(global_input, delimiter=',')
         for row in csv_t:
             global_variable_dict[row[1].upper()] = row[3]
-    except IOError:
+    except IOError as e:
         debug_obj.trace(1, 'Error: No global variable file. Ensure one line of Global Variable table = '
                            'GV, String, @Table:GlobalVariable, 999999')
+        utilities_LBrands.log_error('Error: No global variable file. Ensure one line of Global Variable table = '
+                                    '''GV, String, @Table:GlobalVariable, 999999''')
         end_run = model_obj.sites('EndModel')  # this effectively 'fails' the sim by trying to access a null object
 
     return global_variable_dict
@@ -238,6 +240,8 @@ def check_global_variable(dict, variable_name):
     else:
         debug_obj.trace(1,'Warning: Did not find reference to variable named %s in '
                           'Global Variables name list. Skipping application of this variable.' % variable_name)
+        utilities_LBrands.log_error('Warning: Did not find reference to variable named %s in Global '
+                                    'Variables name list. Skipping application of this variable.' % variable_name)
         return 0
 
 
@@ -249,6 +253,8 @@ def check_datafile(filepath, mode, variable_name):
     except IOError as e:
         debug_obj.trace(1, 'Warning: Could not find the file path %s reference in global variable %s. Skipping'
                            'application of this variable.' % (filepath, variable_name))
+        utilities_LBrands.log_error('Warning: Could not find the file path %s reference in global variable %s. Skipping'
+                                    'application of this variable.' % (filepath, variable_name))
         return False
 
     return True
@@ -266,7 +272,9 @@ def check_header_name(file_name, header, values):
     for i in values:
         if i not in header:
             debug_obj.trace(1,'Warning: Could not find the header value %s in external file %s. Skipping '
-                          'application of this data.' % (i, file_name))
+                              'application of this data.' % (i, file_name))
+            utilities_LBrands.log_error('Warning: Could not find the header value %s in external file %s. Skipping '
+                                        'application of this data.' % (i, file_name))
             return False
 
     return True
