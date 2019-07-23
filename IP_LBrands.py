@@ -21,7 +21,7 @@ def main(site_obj, product_obj, order_quantity):
 
     # if there was no forecast loaded for this site - product, skip the review
     if site_product_obj.getcustomattribute('IP_check') is False:
-        return
+        return 0
 
     # record the site, product, datetime, on hand inventory for daily output
     if model_obj.getcustomattribute('write_daily_inventory') is True:
@@ -65,7 +65,7 @@ def main(site_obj, product_obj, order_quantity):
     order_up_to = math.ceil(lt_forecast_sum)
 
     # calculate future inventory position. Inputs: on hand, due-in, due-out, current date, forecast over lead time
-    inventory_position = on_hand + due_in - due_out - lt_forecast_demand_sum
+    inventory_position = on_hand - order_quantity + due_in - due_out - lt_forecast_demand_sum
 
     # replenish decision: if inventory position <= min (calc'ed reorder point) AND
     #    total remaining forecast > end state probability then

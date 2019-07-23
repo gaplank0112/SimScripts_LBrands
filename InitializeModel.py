@@ -296,7 +296,8 @@ def apply_site_product_data(attribute_name, site_product_obj, input_dict):
         custom_data = input_dict[site_product_obj.site.name][site_product_obj.product.name]
         site_product_obj.setcustomattribute(attribute_name, custom_data)
     except:
-        return 0
+        if attribute_name == 'forecast_dict':  # we can skip the inventory review if there's no forecast
+            site_product_obj.setcustomattribute('IP_check', False)
 
 
 def check_global_variable(dict, variable_name):
