@@ -29,7 +29,9 @@ def main():
     error_log = model_obj.getcustomattribute('log_error')
     datafile = model_obj.modelpath + '\\' + 'SIMERROR.TXT'
     if error_log:
-        write_data(error_log,datafile, 'a', '\t')
+        write_data(error_log,datafile, 'ab', '\t')
+
+    debug_obj.trace(med, 'OnModelEndActions complete')
 
 
 def write_data(data_list, target_file, mode, separator):

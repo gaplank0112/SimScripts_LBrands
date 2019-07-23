@@ -76,7 +76,6 @@ def main(site_obj, product_obj, order_quantity):
         if rem_forecast_sum > end_state_probability:
             replenish_order = True
 
-    replenishment_quantity = None
     if replenish_order is True:
         replenishment_quantity = float(reorder_point - inventory_position)
         replenishment_quantity = math.ceil(replenishment_quantity)
@@ -92,6 +91,7 @@ def main(site_obj, product_obj, order_quantity):
                                         % (site_obj.name, product_obj.name, sim_server.NowAsString()))
     else:
         debug_obj.trace(high, ' No replenishment required at this time')
+        return 0
 
     # if we are writing validation data, record it here
     write_validation_bool = model_obj.getcustomattribute('write_validation')
