@@ -3,7 +3,7 @@ import sim_server
 import datetime
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
 
-low, med, high = 2, 2, 2
+low, med, high = 2, 5, 9
 debug_obj = sim_server.Debug()
 model_obj = sim_server.Model()
 
@@ -53,14 +53,16 @@ def get_site(site_name):
             return site
 
 
-def get_model_path():
-    # TODO: get to the model location
-    return "C:\\Users\\greg.plank\\OneDrive - LLamasoft, Inc\\SCG\\Projects\\201907 LBrands\\Models\\ExampleModel\\"
-
-
 def log_error(error_string):
     log_error = model_obj.getcustomattribute('log_error')
     log_error.append([0,1,1,error_string])
     model_obj.setcustomattribute('log_error',log_error)
+
+
+def is_empty(any_structure):
+    if any_structure:
+        return False
+    else:
+        return True
 
 

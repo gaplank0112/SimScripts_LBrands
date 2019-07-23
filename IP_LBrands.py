@@ -6,7 +6,7 @@ import math
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
 
 
-low, med, high = 2, 2, 2
+low, med, high = 2, 5, 9
 debug_obj = sim_server.Debug()
 model_obj = sim_server.Model()
 
@@ -73,7 +73,6 @@ def main(site_obj, product_obj, order_quantity):
     replenish_order = False
     if inventory_position <= reorder_point:
         if rem_forecast_sum > end_state_probability:
-            debug_obj.trace(1,'CREATE AN ORDER 1')
             replenish_order = True
 
     replenishment_quantity = None
@@ -88,8 +87,8 @@ def main(site_obj, product_obj, order_quantity):
         else:
             debug_obj.trace(1, ' Replenishment order failed for %s %s at %s'
                             % (site_obj.name, product_obj.name, sim_server.NowAsString()))
-            # debug_obj.errorlog('Replenishment order failed for %s %s at %s'                       SCGX only
-            #                    % (site_obj.name, product_obj.name, sim_server.NowAsString()))
+            utilities_LBrands.log_error('Replenishment order failed for %s %s at %s'
+                                        % (site_obj.name, product_obj.name, sim_server.NowAsString()))
     else:
         debug_obj.trace(high, ' No replenishment required at this time')
 
@@ -105,6 +104,8 @@ def main(site_obj, product_obj, order_quantity):
 
 def record_on_hand_inventory(site_product_obj):
     daily_inventory = model_obj.getcustomattribute('daily_inventory')
+    if not daily_inventory:
+        daily_inventory.append(['date_time', 'skuloc', 'item_nbr', 'on_hand'])
     daily_inventory.append([sim_server.NowAsString(), site_product_obj.site.name, site_product_obj.product.name,
                             site_product_obj.inventory])
     model_obj.setcustomattribute('daily_inventory', daily_inventory)
@@ -112,10 +113,20 @@ def record_on_hand_inventory(site_product_obj):
 
 def record_validation(data_list):
     validation_data = model_obj.getcustomattribute('validation_data')
+    if not validation_data:
+        validation_data.append(['date_time','skuloc','item_nbr', 'on_hand', ' due_in', ' due_out',
+                                'lt_forecast_demand_sum', 'inventory_position', 'lead_time', 'lead_time_mean',
+                                'lead_time_stddev', 'rem_forecast_mean', 'rem_forecast_stddev', 'z', 'ss_raw',
+                                'reorder_point', 'lt_forecast_sum', 'order_up_to', ' replenish_order',
+                                'replenishment_quantity'])
     validation_data.append(data_list)
     model_obj.setcustomattribute('validation_data', validation_data)
-#############  Example s,S script ##################
 
+
+
+
+
+#############  Example s,S script ##################
 
 def main_ss(site_obj, product_obj, order_quantity):
     debug_obj.trace(low, '-'*30)

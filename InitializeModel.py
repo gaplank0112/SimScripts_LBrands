@@ -5,7 +5,7 @@ import csv
 import sim_server
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
 
-low, med, high = 2, 2, 2
+low, med, high = 2, 5, 9
 debug_obj = sim_server.Debug()
 model_obj = sim_server.Model()
 dt = datetime.datetime
@@ -24,6 +24,7 @@ def main():
     # read and store default service level and end state probability from global variables
     default_end_state_probability = global_variable_dict['DEFAULT ENDSTATE PROBABILITY']
     default_service_level = global_variable_dict['DEFAULT SERVICE LEVEL']
+    default_target_wos = global_variable_dict['DEFAULT TARGET WOS']
     write_daily_inventory_bool = bool(global_variable_dict['OUTPUT DAILY INVENTORY'])
     write_validation_bool = bool(global_variable_dict['OUTPUT IP VALIDATION'])
 
@@ -33,7 +34,7 @@ def main():
     model_obj.setcustomattribute('write_daily_inventory', write_daily_inventory_bool)
     model_obj.setcustomattribute('write_validation', write_validation_bool)
     model_obj.setcustomattribute('model_folder', get_model_folder())
-    model_obj.setcustomattribute('log_error',[])
+    model_obj.setcustomattribute('log_error', [])
 
     # set custom attributes on each site-product
     for site_obj in model_obj.sites:
@@ -43,6 +44,7 @@ def main():
             site_product_obj.setcustomattribute('lead_time',lead_time)
             site_product_obj.setcustomattribute('end_state_probability', default_end_state_probability)
             site_product_obj.setcustomattribute('service_level', default_service_level)
+            site_product_obj.setcustomattribute('target_WOS', default_target_wos)
             site_product_obj.setcustomattribute('IP_check', True)
 
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
@@ -59,8 +61,10 @@ def main():
             end_state_override = import_end_state_override(global_variable,datafile)
             apply_end_state_override(end_state_override)
 
-    # read in the parameters file and add custom attributes
-    # read the transport time and add as a custom attribute = lead time
+    # TODO: read in service level overrides
+
+    # TODO: read in target WOS overrides
+
 
     debug_obj.trace(low,'Initialize Model complete')
 
@@ -113,12 +117,7 @@ def get_gv():
 
     return global_variable_dict
 
-
-    # TODO check for 'relative data path'. Look for the input file in same folder as the model.
-    # return "C:\\Users\\greg.plank\\OneDrive - LLamasoft, Inc\\SCG\\Projects\\" \
-    #           "201907 LBrands\\Data\\3 sample SKUs forecast.csv"
-
-
+# TODO: refactor to include data checks
 def apply_forecast(global_forecast_dict):
     # loop through site products and apply forecasts to custom attribute
     for site_obj in model_obj.sites:
@@ -196,6 +195,16 @@ def apply_service_level_override():
     return 0
 
 
+def import_wos_override():
+    # TODO: import wos overrides
+    return 0
+
+
+def apply_wos_override():
+    # TODO: apply wos overrides
+    return 0
+
+# TODO: refactor to apply data checks
 def import_forecast(datafile):
     global_forecast_dict = {}
     # open the forecast file
