@@ -39,7 +39,7 @@ def main(site_obj, product_obj, order_quantity):
     lead_time_mean = utilities_LBrands.list_mean(lt_values)
     lead_time_stddev = utilities_LBrands.list_stddev(lt_values)
     forecast_offset = lead_time
-    end_state_probability = site_product_obj.getcustomattribute('end_state_probability')
+    end_state_probability = float(site_product_obj.getcustomattribute('end_state_probability'))
 
     lt_demand_values = utilities_LBrands.get_forecast_values(site_name, product_name, current_date_dt, lead_time)
     lt_forecast_demand_sum = sum(lt_demand_values)
@@ -56,7 +56,8 @@ def main(site_obj, product_obj, order_quantity):
     rem_forecast_stddev = utilities_LBrands.list_stddev(rem_forecast_values)
 
     # compute the reorder point using standard safety stock formula. Round answer to nearest integer
-    z = 1.64485  # TODO: find a way to calculate z from service level probability
+    service_level = float(site_product_obj.getcustomattribute('service_level'))
+    z = utilities_LBrands.z_score_lookup(service_level)
     ss_raw = z * math.sqrt((lead_time_mean * rem_forecast_stddev**2) + (rem_forecast_mean * lead_time_stddev)**2)
     reorder_point = round(ss_raw)
 
@@ -97,8 +98,9 @@ def main(site_obj, product_obj, order_quantity):
     if write_validation_bool is True:
         validation_data_list = [sim_server.NowAsString(), site_name, product_name, on_hand, due_in, due_out,
                                 lt_forecast_demand_sum, inventory_position, lead_time, lead_time_mean, lead_time_stddev,
-                                rem_forecast_mean, rem_forecast_stddev, z, ss_raw, reorder_point, lt_forecast_sum,
-                                order_up_to, replenish_order, replenishment_quantity]
+                                rem_forecast_mean, rem_forecast_stddev, service_level, z, ss_raw, reorder_point,
+                                lt_forecast_sum, order_up_to, rem_forecast_sum, end_state_probability, replenish_order,
+                                replenishment_quantity]
         record_validation(validation_data_list)
 
 
@@ -116,9 +118,9 @@ def record_validation(data_list):
     if not validation_data:
         validation_data.append(['date_time','skuloc','item_nbr', 'on_hand', ' due_in', ' due_out',
                                 'lt_forecast_demand_sum', 'inventory_position', 'lead_time', 'lead_time_mean',
-                                'lead_time_stddev', 'rem_forecast_mean', 'rem_forecast_stddev', 'z', 'ss_raw',
-                                'reorder_point', 'lt_forecast_sum', 'order_up_to', ' replenish_order',
-                                'replenishment_quantity'])
+                                'lead_time_stddev', 'rem_forecast_mean', 'rem_forecast_stddev', 'service_level', 'z',
+                                'ss_raw', 'reorder_point', 'lt_forecast_sum', 'order_up_to', 'rem_forecast_sum',
+                                'end_state_probability', ' replenish_order', 'replenishment_quantity'])
     validation_data.append(data_list)
     model_obj.setcustomattribute('validation_data', validation_data)
 

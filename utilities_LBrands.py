@@ -29,8 +29,7 @@ def get_forecast_values(site_name, product_name, start_date, forecast_window):
     # get the site_product
     site_obj = get_site(site_name)
     site_product_obj = site_obj.getsiteproduct(product_name)
-
-    # calculate the end date as start date + forecast window
+   # calculate the end date as start date + forecast window
     end_date = start_date + datetime.timedelta(days=forecast_window)
 
     # get the forecast_dict for the site_product
@@ -64,5 +63,10 @@ def is_empty(any_structure):
         return False
     else:
         return True
+
+
+def z_score_lookup(p_score):
+    z_score_table = model_obj.getcustomattribute('z_score_table')
+    return z_score_table[p_score]
 
 
