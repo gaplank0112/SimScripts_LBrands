@@ -2,7 +2,7 @@ import sys
 import sim_server
 sys.path.append("C:\Python26\SCG_64\Lib")
 
-low, med, high = 2, 2, 2
+low, med, high = 2, 5, 9
 debug_obj = sim_server.Debug()
 model_obj = sim_server.Model()
 
