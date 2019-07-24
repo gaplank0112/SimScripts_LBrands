@@ -21,7 +21,9 @@ def main(site_obj, product_obj, order_quantity):
 
     # if there was no forecast loaded for this site - product, skip the review
     if site_product_obj.getcustomattribute('IP_check') is False:
-        return 0
+        debug_obj.trace(med, 'This site product %s-%s has no forecast. Skipping review'
+                        % (site_product_obj.site.name, site_product_obj.product.name))
+        return None
 
     # record the site, product, datetime, on hand inventory for daily output
     if model_obj.getcustomattribute('write_daily_inventory') is True:
@@ -76,22 +78,24 @@ def main(site_obj, product_obj, order_quantity):
         if rem_forecast_sum > end_state_probability:
             replenish_order = True
 
+    replenishment_quantity = None
     if replenish_order is True:
         replenishment_quantity = float(reorder_point - inventory_position)
         replenishment_quantity = math.ceil(replenishment_quantity)
-        debug_obj.trace(high, '  Need replenishment: % units of %s for %s'
-                        % (replenishment_quantity, product_name, site_name))
-        new_order = sim_server.CreateOrder(product_name, replenishment_quantity, site_name)
-        if new_order is not None:
-            debug_obj.trace(high, ' Replenishment order of %s units placed' % replenishment_quantity)
-        else:
-            debug_obj.trace(1, ' Replenishment order failed for %s %s at %s'
-                            % (site_obj.name, product_obj.name, sim_server.NowAsString()))
-            utilities_LBrands.log_error('Replenishment order failed for %s %s at %s'
-                                        % (site_obj.name, product_obj.name, sim_server.NowAsString()))
+        if replenishment_quantity > 0.0:
+            debug_obj.trace(med, '  Need replenishment: %s units of %s for %s'
+                            % (replenishment_quantity, product_name, site_name))
+            try:
+                sim_server.CreateOrder(product_name, replenishment_quantity, site_name)
+                debug_obj.trace(med, ' Replenishment order of %s units placed' % replenishment_quantity)
+            except:
+                debug_obj.trace(1, ' Replenishment order failed for %s units %s %s at %s'
+                                % (replenishment_quantity, site_obj.name, product_obj.name, sim_server.NowAsString()))
+                utilities_LBrands.log_error('Replenishment order failed for %s units %s %s at %s'
+                                            % (replenishment_quantity, site_obj.name, product_obj.name,
+                                               sim_server.NowAsString()))
     else:
-        debug_obj.trace(high, ' No replenishment required at this time')
-        return 0
+        debug_obj.trace(med, ' No replenishment required at this time')
 
     # if we are writing validation data, record it here
     write_validation_bool = model_obj.getcustomattribute('write_validation')

@@ -67,6 +67,9 @@ def is_empty(any_structure):
 
 def z_score_lookup(p_score):
     z_score_table = model_obj.getcustomattribute('z_score_table')
-    return z_score_table[p_score]
+    if z_score_table[p_score]:
+        return z_score_table[p_score]
+    else:
+        return 0.0
 
 
