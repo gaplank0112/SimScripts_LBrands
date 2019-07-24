@@ -84,8 +84,6 @@ def main():
         if check_datafile(datafile, 'r', global_variable) is True:
             target_wos_override = import_wos_override(global_variable, datafile)
 
-    # TODO: read in target WOS overrides
-
     # apply the custom data dictionaries
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:

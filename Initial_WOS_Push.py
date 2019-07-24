@@ -21,7 +21,7 @@ def main():
     # loop through the sites and products
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
-            debug_obj.trace(1,' Reviewing site %s product %s for WOS push'
+            debug_obj.trace(med,' Reviewing site %s product %s for WOS push'
                             % (site_product_obj.site.name, site_product_obj.product.name))
 
             # get the forecast dictionary for this site product. If it empty, skip and move to the next site product
