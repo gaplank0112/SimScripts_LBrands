@@ -1,8 +1,12 @@
+""" Initial WOS Push reads through the forecast files, finds the first date with any forecast value,
+sums and rounds up the first WOS (weeks) of forecast and sets an event on the calendar to drop the order at
+lead time + 7 day prior to the first forecast date with a value."""
+
 import sys
-import utilities_LBrands
 import datetime
 import math
 import sim_server
+import utilities_LBrands
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
 
 low, med, high = 2, 5, 9
@@ -21,13 +25,13 @@ def main():
     # loop through the sites and products
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
-            debug_obj.trace(med,' Reviewing site %s product %s for WOS push'
+            debug_obj.trace(med, ' Reviewing site %s product %s for WOS push'
                             % (site_product_obj.site.name, site_product_obj.product.name))
 
             # get the forecast dictionary for this site product. If it empty, skip and move to the next site product
             forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
             if utilities_LBrands.is_empty(forecast_dict):
-                debug_obj.trace(med,' The forecast dictionary is empty. Skipping this site-product')
+                debug_obj.trace(med, ' The forecast dictionary is empty. Skipping this site-product')
                 continue
 
             # get the list of dates with a forecast and then find the earliest date with a forecast
@@ -39,7 +43,7 @@ def main():
             # sum the forecasted values from the first forecast date to first forecast date + wos days. round up.
             target_wos = float(site_product_obj.getcustomattribute('target_WOS')) * 7.0
             wos_order_quantity = utilities_LBrands.get_forecast_values(site_obj.name, site_product_obj.product.name,
-                                                                 first_forecast,target_wos)
+                                                                       first_forecast, target_wos)
             wos_order_quantity = math.ceil(sum(wos_order_quantity))
 
             # if the wos_order_quantity = 0.0, skip this site product
@@ -75,4 +79,4 @@ def main():
         order_date = datetime.datetime.strftime(order_date_key, '%m/%d/%Y %H:%M:%S')
         sim_server.ScheduleCustomEvent('DropOrder', order_date, [order_date_key])
 
-    debug_obj.trace(low,'Initial WOS Push complete')
+    debug_obj.trace(low, 'Initial WOS Push complete')

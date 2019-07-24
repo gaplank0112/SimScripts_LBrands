@@ -1,8 +1,18 @@
+""" InitializeModel sets custom attributes on the model object and each site-product with defaults.
+Then we read in external data files and apply any specific information to those custom attributes for
+access later in the simulation"""
+
+__author__ = "Greg Plank (LLamasoft)"
+__copyright__ = "2019 07 24"
+__credits__ = ["Srikanth Tondukulam, Tim Wolfer, Timothy Shaughnessy"]
+__version__ = "1.0.0"
+__status__ = "Production"
+
 import sys
-import utilities_LBrands
 import datetime
 import csv
 import sim_server
+import utilities_LBrands
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
 
 low, med, high = 2, 5, 9
@@ -42,7 +52,7 @@ def main():
         for site_product_obj in site_obj.products:
             site_product_obj.setcustomattribute('forecast_dict', {})
             lead_time = get_lead_time(site_product_obj)
-            site_product_obj.setcustomattribute('lead_time',lead_time)
+            site_product_obj.setcustomattribute('lead_time', lead_time)
             site_product_obj.setcustomattribute('end_state_probability', default_end_state_probability)
             site_product_obj.setcustomattribute('service_level', default_service_level)
             site_product_obj.setcustomattribute('target_WOS', default_target_wos)
@@ -63,8 +73,8 @@ def main():
     datafile = check_global_variable(global_variable_dict, global_variable)
     datafile = check_relative_path(datafile)
     if datafile != 0:
-        if check_datafile(datafile,'r',global_variable) is True:
-            end_state_override = import_end_state_override(global_variable,datafile)
+        if check_datafile(datafile, 'r', global_variable) is True:
+            end_state_override = import_end_state_override(global_variable, datafile)
 
     # read in service level overrides
     service_level_override = {}
@@ -92,7 +102,7 @@ def main():
             apply_site_product_data('service_level', site_product_obj, service_level_override)
             apply_site_product_data('target_WOS', site_product_obj, target_wos_override)
 
-    debug_obj.trace(low,'Initialize Model complete')
+    debug_obj.trace(low, 'Initialize Model complete')
 
 
 def get_model_folder():
@@ -134,12 +144,12 @@ def get_gv():
         csv_t = csv.reader(global_input, delimiter=',')
         for row in csv_t:
             global_variable_dict[row[1].upper()] = row[3]
-    except IOError as e:
+    except IOError:
         debug_obj.trace(1, 'Error: No global variable file. Ensure one line of Global Variable table = '
                            'GV, String, @Table:GlobalVariable, 999999')
         utilities_LBrands.log_error('Error: No global variable file. Ensure one line of Global Variable table = '
                                     '''GV, String, @Table:GlobalVariable, 999999''')
-        end_run = model_obj.sites('EndModel')  # this effectively 'fails' the sim by trying to access a null object
+        model_obj.sites('EndModel')  # this effectively 'fails' the sim by trying to access a null object
 
     return global_variable_dict
 
@@ -191,11 +201,11 @@ def import_end_state_override(global_variable, datafile):
         csv_t = csv.reader(ExternalFile)
 
         # set the expected column names
-        column_names = ['skuloc','item_nbr','end_state_prob']
+        column_names = ['skuloc', 'item_nbr', 'end_state_prob']
 
         # get the column numbers based on header names
         header = next(csv_t)
-        if check_header_name(str(global_variable),header,column_names) is True:
+        if check_header_name(str(global_variable), header, column_names) is True:
             site_col = header.index(column_names[0])
             product_col = header.index(column_names[1])
             qty_col = header.index(column_names[2])
@@ -236,7 +246,7 @@ def import_service_level_override(global_variable, datafile):
             service_level_col = header.index(column_names[2])
 
             # get the service level overrides and store them in the dictionary
-            for row  in csv_t:
+            for row in csv_t:
                 site = row[site_col].zfill(4)  # zfill adds leading zeros
                 sku = row[product_col]
                 service_level_col = float(row[service_level_col])
@@ -298,23 +308,23 @@ def apply_site_product_data(attribute_name, site_product_obj, input_dict):
             site_product_obj.setcustomattribute('IP_check', False)
 
 
-def check_global_variable(dict, variable_name):
-    if variable_name in dict.keys():
-        return dict[variable_name]
+def check_global_variable(data_dict, variable_name):
+    if variable_name in data_dict.keys():
+        return data_dict[variable_name]
     else:
-        debug_obj.trace(1,'Warning: Did not find reference to variable named %s in '
-                          'Global Variables name list. Skipping application of this variable.' % variable_name)
+        debug_obj.trace(1, 'Warning: Did not find reference to variable named %s in '
+                        'Global Variables name list. Skipping application of this variable.' % variable_name)
         utilities_LBrands.log_error('Warning: Did not find reference to variable named %s in Global '
                                     'Variables name list. Skipping application of this variable.' % variable_name)
         return 0
 
 
 def check_datafile(filepath, mode, variable_name):
-    ''' Check if a file exists and is accessible. '''
+    # Check if a file exists and is accessible.
     try:
         f = open(filepath, mode)
         f.close()
-    except IOError as e:
+    except IOError:
         debug_obj.trace(1, 'Warning: Could not find the file path %s reference in global variable %s. Skipping '
                            'application of this variable.' % (filepath, variable_name))
         utilities_LBrands.log_error('Warning: Could not find the file path %s reference in global variable %s. Skipping'
@@ -326,7 +336,7 @@ def check_datafile(filepath, mode, variable_name):
 
 def check_relative_path(datafile):
     if '..\\' in datafile:  # the user entered a relative path starting from the model location:
-        datafile = str.replace(datafile,'..','')
+        datafile = str.replace(datafile, '..', '')
         return model_obj.getcustomattribute('model_folder') + datafile
     else:
         return datafile
@@ -335,8 +345,8 @@ def check_relative_path(datafile):
 def check_header_name(file_name, header, values):
     for i in values:
         if i not in header:
-            debug_obj.trace(1,'Warning: Could not find the header value %s in external file %s. Skipping '
-                              'application of this data.' % (i, file_name))
+            debug_obj.trace(1, 'Warning: Could not find the header value %s in external file %s. Skipping '
+                            'application of this data.' % (i, file_name))
             utilities_LBrands.log_error('Warning: Could not find the header value %s in external file %s. Skipping '
                                         'application of this data.' % (i, file_name))
             return False
@@ -353,12 +363,3 @@ def add_z_score_table():
     z_score_table[85.0] = 1.04
     z_score_table[50.0] = 0.00
     return z_score_table
-
-
-
-
-
-
-
-
-

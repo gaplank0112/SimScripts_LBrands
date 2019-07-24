@@ -1,3 +1,5 @@
+"""On Model End Actions executes a series of custom outputs."""
+
 import sys
 import csv
 import sim_server
@@ -23,13 +25,13 @@ def main():
     if write_validation_bool is True:
         validation_data = model_obj.getcustomattribute('validation_data')
         datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Validation.txt'
-        write_data(validation_data, datafile, 'wb',',')
+        write_data(validation_data, datafile, 'wb', ',')
 
     # write anything from the script error log
     error_log = model_obj.getcustomattribute('log_error')
     datafile = model_obj.modelpath + '\\' + 'SIMERROR.TXT'
     if error_log:
-        write_data(error_log,datafile, 'ab', '\t')
+        write_data(error_log, datafile, 'ab', '\t')
 
     debug_obj.trace(med, 'OnModelEndActions complete')
 
@@ -40,6 +42,3 @@ def write_data(data_list, target_file, mode, separator):
 
         for list_element in data_list:
             writer.writerow(list_element)
-
-
-

@@ -1,6 +1,8 @@
+"""Inventory Report allows us to set a scheduled capture of inventory on hand data."""
+
 import sys
 import sim_server
-sys.path.append("C:\Python26\SCG_64\Lib")
+sys.path.append("C:\\Python26\\SCG_64\\Lib")
 
 low, med, high = 2, 5, 9
 debug_obj = sim_server.Debug()
@@ -15,5 +17,3 @@ def main():
                 [sim_server.NowAsString(), site_product_obj.site.name, site_product_obj.product.name,
                  site_product_obj.inventory])
             model_obj.setcustomattribute('daily_inventory', daily_inventory)
-
-    sim_server.ScheduleCustomEvent('InventoryReport','24 HR','')

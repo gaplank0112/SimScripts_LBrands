@@ -1,8 +1,14 @@
+""" IP_LBrands is an inventory policy script. It incorporates a safety stock calculation to determine the
+reorder point and a lead time forecast calculation to determine reorder up to. Inventory position is calculated
+from on hand - current order qty (if any) + due-in(total, not limited by lead time - due-out(total, not limited
+ by lead time) - forecasted demand over lead time. In addition, the remaining forecast is summed and compared
+ against an end state probabiltiy value to determine if orders will be generated regardless of inventory position."""
+
 import sys
-import sim_server
-import utilities_LBrands
 import datetime
 import math
+import sim_server
+import utilities_LBrands
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
 
 
@@ -120,7 +126,7 @@ def record_on_hand_inventory(site_product_obj):
 def record_validation(data_list):
     validation_data = model_obj.getcustomattribute('validation_data')
     if not validation_data:
-        validation_data.append(['date_time','skuloc','item_nbr', 'on_hand', ' due_in', ' due_out',
+        validation_data.append(['date_time', 'skuloc', 'item_nbr', 'on_hand', ' due_in', ' due_out',
                                 'lt_forecast_demand_sum', 'inventory_position', 'lead_time', 'lead_time_mean',
                                 'lead_time_stddev', 'rem_forecast_mean', 'rem_forecast_stddev', 'service_level', 'z',
                                 'ss_raw', 'reorder_point', 'lt_forecast_sum', 'order_up_to', 'rem_forecast_sum',
@@ -129,10 +135,8 @@ def record_validation(data_list):
     model_obj.setcustomattribute('validation_data', validation_data)
 
 
+# ----------------------- Example s,S script ------------------------
 
-
-
-#############  Example s,S script ##################
 
 def main_ss(site_obj, product_obj, order_quantity):
     debug_obj.trace(low, '-'*30)
@@ -166,5 +170,4 @@ def main_ss(site_obj, product_obj, order_quantity):
             # debug_obj.errorlog('Replenishment order failed for %s %s at %s'                       SCGX only
             #                    % (site_obj.name, product_obj.name, sim_server.NowAsString()))
     else:
-        debug_obj.trace(low,' No replenishment required at this time')
-
+        debug_obj.trace(low, ' No replenishment required at this time')

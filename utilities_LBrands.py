@@ -1,6 +1,9 @@
+"""utilities_LBrands contains a collection of internal utilities that perform simple actions available for
+multiple scripts."""
+
 import sys
-import sim_server
 import datetime
+import sim_server
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
 
 low, med, high = 2, 5, 9
@@ -29,7 +32,8 @@ def get_forecast_values(site_name, product_name, start_date, forecast_window):
     # get the site_product
     site_obj = get_site(site_name)
     site_product_obj = site_obj.getsiteproduct(product_name)
-   # calculate the end date as start date + forecast window
+
+    # calculate the end date as start date + forecast window
     end_date = start_date + datetime.timedelta(days=forecast_window)
 
     # get the forecast_dict for the site_product
@@ -53,9 +57,9 @@ def get_site(site_name):
 
 
 def log_error(error_string):
-    log_error = model_obj.getcustomattribute('log_error')
-    log_error.append([0,1,1,error_string])
-    model_obj.setcustomattribute('log_error',log_error)
+    log_error_list = model_obj.getcustomattribute('log_error')
+    log_error_list.append([0, 1, 1, error_string])
+    model_obj.setcustomattribute('log_error', log_error_list)
 
 
 def is_empty(any_structure):
@@ -71,5 +75,3 @@ def z_score_lookup(p_score):
         return z_score_table[p_score]
     else:
         return 0.0
-
-
