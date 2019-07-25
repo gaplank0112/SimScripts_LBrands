@@ -73,7 +73,8 @@ def main(site_obj, product_obj, order_quantity):
     order_up_to = math.ceil(lt_forecast_sum)
 
     # calculate future inventory position. Inputs: on hand, due-in, due-out, current date, forecast over lead time
-    inventory_position = on_hand - order_quantity + due_in - due_out - lt_forecast_demand_sum
+    inventory_position_raw = on_hand - order_quantity + due_in - due_out - lt_forecast_demand_sum
+    inventory_position = round(inventory_position_raw)
 
     # replenish decision: if inventory position <= min (calc'ed reorder point) AND
     #    total remaining forecast > end state probability then
@@ -107,10 +108,10 @@ def main(site_obj, product_obj, order_quantity):
     write_validation_bool = model_obj.getcustomattribute('write_validation')
     if write_validation_bool is True:
         validation_data_list = [sim_server.NowAsString(), site_name, product_name, on_hand, due_in, due_out,
-                                lt_forecast_demand_sum, inventory_position, lead_time, lead_time_mean, lead_time_stddev,
-                                rem_forecast_mean, rem_forecast_stddev, service_level, z, ss_raw, reorder_point,
-                                lt_forecast_sum, order_up_to, rem_forecast_sum, end_state_probability, replenish_order,
-                                replenishment_quantity]
+                                lt_forecast_demand_sum, inventory_position_raw, inventory_position, lead_time,
+                                lead_time_mean, lead_time_stddev, rem_forecast_mean, rem_forecast_stddev,
+                                service_level, z, ss_raw, reorder_point, lt_forecast_sum, order_up_to,
+                                rem_forecast_sum, end_state_probability, replenish_order, replenishment_quantity]
         record_validation(validation_data_list)
 
 
@@ -127,10 +128,11 @@ def record_validation(data_list):
     validation_data = model_obj.getcustomattribute('validation_data')
     if not validation_data:
         validation_data.append(['date_time', 'skuloc', 'item_nbr', 'on_hand', ' due_in', ' due_out',
-                                'lt_forecast_demand_sum', 'inventory_position', 'lead_time', 'lead_time_mean',
-                                'lead_time_stddev', 'rem_forecast_mean', 'rem_forecast_stddev', 'service_level', 'z',
-                                'ss_raw', 'reorder_point', 'lt_forecast_sum', 'order_up_to', 'rem_forecast_sum',
-                                'end_state_probability', ' replenish_order', 'replenishment_quantity'])
+                                'lt_forecast_demand_sum', 'inventory position raw' 'inventory_position', 'lead_time',
+                                'lead_time_mean', 'lead_time_stddev', 'rem_forecast_mean', 'rem_forecast_stddev',
+                                'service_level', 'z', 'ss_raw', 'reorder_point', 'lt_forecast_sum', 'order_up_to',
+                                'rem_forecast_sum', 'end_state_probability', ' replenish_order',
+                                'replenishment_quantity'])
     validation_data.append(data_list)
     model_obj.setcustomattribute('validation_data', validation_data)
 
