@@ -62,8 +62,8 @@ def main():
     global_forecast_dict = {}
     global_variable = 'FORECAST FILE'
     datafile = check_global_variable(global_variable_dict, global_variable)
-    datafile = check_relative_path(datafile)
     if datafile != 0:
+        datafile = check_relative_path(datafile)
         if check_datafile(datafile, 'r', global_variable) is True:
             global_forecast_dict = import_forecast(global_variable, datafile)
 
@@ -71,8 +71,8 @@ def main():
     end_state_override = {}
     global_variable = 'OVERRIDE ENDSTATE PROB'
     datafile = check_global_variable(global_variable_dict, global_variable)
-    datafile = check_relative_path(datafile)
     if datafile != 0:
+        datafile = check_relative_path(datafile)
         if check_datafile(datafile, 'r', global_variable) is True:
             end_state_override = import_end_state_override(global_variable, datafile)
 
@@ -80,8 +80,8 @@ def main():
     service_level_override = {}
     global_variable = 'OVERRIDE SERVICE LEVEL'
     datafile = check_global_variable(global_variable_dict, global_variable)
-    datafile = check_relative_path(datafile)
     if datafile != 0:
+        datafile = check_relative_path(datafile)
         if check_datafile(datafile, 'r', global_variable) is True:
             service_level_override = import_service_level_override(global_variable, datafile)
 
@@ -89,8 +89,8 @@ def main():
     target_wos_override = {}
     global_variable = 'OVERRIDE WOS TARGET'
     datafile = check_global_variable(global_variable_dict, global_variable)
-    datafile = check_relative_path(datafile)
     if datafile != 0:
+        datafile = check_relative_path(datafile)
         if check_datafile(datafile, 'r', global_variable) is True:
             target_wos_override = import_wos_override(global_variable, datafile)
 
@@ -310,7 +310,10 @@ def apply_site_product_data(attribute_name, site_product_obj, input_dict):
 
 def check_global_variable(data_dict, variable_name):
     if variable_name in data_dict.keys():
-        return data_dict[variable_name]
+        if data_dict[variable_name]:         # if the variable data is populated with a path
+            return data_dict[variable_name]
+        else:                                # if the variable data is blank, just skip this
+            return 0
     else:
         debug_obj.trace(1, 'Warning: Did not find reference to variable named %s in '
                         'Global Variables name list. Skipping application of this variable.' % variable_name)

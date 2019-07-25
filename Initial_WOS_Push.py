@@ -42,9 +42,9 @@ def main():
             # get the target WOS and multiply by 7 (WOS is assumed to be in weeks).
             # sum the forecasted values from the first forecast date to first forecast date + wos days. round up.
             target_wos = float(site_product_obj.getcustomattribute('target_WOS')) * 7.0
-            wos_order_quantity = utilities_LBrands.get_forecast_values(site_obj.name, site_product_obj.product.name,
-                                                                       first_forecast, target_wos)
-            wos_order_quantity = math.ceil(sum(wos_order_quantity))
+            forecast_quantity = utilities_LBrands.get_forecast_values(site_obj.name, site_product_obj.product.name,
+                                                                      first_forecast, target_wos)
+            wos_order_quantity = math.ceil(sum(forecast_quantity))
 
             # if the wos_order_quantity = 0.0, skip this site product
             if wos_order_quantity == 0.0:
@@ -62,6 +62,11 @@ def main():
             current_date = datetime.datetime.utcfromtimestamp(sim_server.Now()) + datetime.timedelta(seconds=1)
             if order_date < current_date:
                 order_date = current_date
+
+            debug_obj.trace(med, ' WOS push order scheduled. Forcast Qty %s, order quantity: %s, '
+                                 'first forecast date %s, target arrival date %s, lead time %s, order drop date %s' %
+                            (sum(forecast_quantity), wos_order_quantity, first_forecast, target_date,
+                             lead_time, order_date))
 
             # collect the wos order details in the wos order dictionary
             if order_date in wos_orders_dict:
