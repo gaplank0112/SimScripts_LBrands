@@ -87,7 +87,7 @@ def main(site_obj, product_obj, order_quantity):
 
     replenishment_quantity = None
     if replenish_order is True:
-        replenishment_quantity = float(reorder_point - inventory_position)
+        replenishment_quantity = float(order_up_to - inventory_position)
         replenishment_quantity = math.ceil(replenishment_quantity)
         if replenishment_quantity > 0.0:
             debug_obj.trace(med, '  Need replenishment: %s units of %s for %s'
@@ -128,7 +128,7 @@ def record_validation(data_list):
     validation_data = model_obj.getcustomattribute('validation_data')
     if not validation_data:
         validation_data.append(['date_time', 'skuloc', 'item_nbr', 'on_hand', ' due_in', ' due_out',
-                                'lt_forecast_demand_sum', 'inventory position raw' 'inventory_position', 'lead_time',
+                                'lt_forecast_demand_sum', 'inventory position raw', 'inventory_position', 'lead_time',
                                 'lead_time_mean', 'lead_time_stddev', 'rem_forecast_mean', 'rem_forecast_stddev',
                                 'service_level', 'z', 'ss_raw', 'reorder_point', 'lt_forecast_sum', 'order_up_to',
                                 'rem_forecast_sum', 'end_state_probability', ' replenish_order',
