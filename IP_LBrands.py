@@ -2,7 +2,13 @@
 reorder point and a lead time forecast calculation to determine reorder up to. Inventory position is calculated
 from on hand - current order qty (if any) + due-in(total, not limited by lead time - due-out(total, not limited
  by lead time) - forecasted demand over lead time. In addition, the remaining forecast is summed and compared
- against an end state probabiltiy value to determine if orders will be generated regardless of inventory position."""
+ against an end state probabiltiy value to determine if orders will be generated regardless of inventory position.
+
+ change version 1.0.1 Changed inventory position formula to: on-hand - order quantity + due-in - due-out -
+ lt_forecast_demand_sum_effective   where lt_forecast_demand_sum_effective = min(on-hand, lt_forecast_demand_sum)
+ """
+
+__version__ = "1.0.1"
 
 import sys
 import datetime
@@ -51,6 +57,7 @@ def main(site_obj, product_obj, order_quantity):
 
     lt_demand_values = utilities_LBrands.get_forecast_values(site_name, product_name, current_date_dt, lead_time)
     lt_forecast_demand_sum = sum(lt_demand_values)
+    lt_forecast_demand_sum_effective = min(on_hand, lt_forecast_demand_sum)
 
     offset_start = current_date_dt + datetime.timedelta(days=forecast_offset)
     lt_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name, offset_start, lead_time)
@@ -73,7 +80,7 @@ def main(site_obj, product_obj, order_quantity):
     order_up_to = math.ceil(lt_forecast_sum)
 
     # calculate future inventory position. Inputs: on hand, due-in, due-out, current date, forecast over lead time
-    inventory_position_raw = on_hand - order_quantity + due_in - due_out - lt_forecast_demand_sum
+    inventory_position_raw = on_hand - order_quantity + due_in - due_out - lt_forecast_demand_sum_effective
     inventory_position = round(inventory_position_raw)
 
     # replenish decision: if inventory position <= min (calc'ed reorder point) AND
@@ -108,10 +115,11 @@ def main(site_obj, product_obj, order_quantity):
     write_validation_bool = model_obj.getcustomattribute('write_validation')
     if write_validation_bool is True:
         validation_data_list = [sim_server.NowAsString(), site_name, product_name, on_hand, due_in, due_out,
-                                lt_forecast_demand_sum, inventory_position_raw, inventory_position, lead_time,
-                                lead_time_mean, lead_time_stddev, rem_forecast_mean, rem_forecast_stddev,
-                                service_level, z, ss_raw, reorder_point, lt_forecast_sum, order_up_to,
-                                rem_forecast_sum, end_state_probability, replenish_order, replenishment_quantity]
+                                lt_forecast_demand_sum, lt_forecast_demand_sum_effective, inventory_position_raw,
+                                inventory_position, lead_time, lead_time_mean, lead_time_stddev, rem_forecast_mean,
+                                rem_forecast_stddev, service_level, z, ss_raw, reorder_point, lt_forecast_sum,
+                                order_up_to, rem_forecast_sum, end_state_probability, replenish_order,
+                                replenishment_quantity]
         record_validation(validation_data_list)
 
 
@@ -128,7 +136,8 @@ def record_validation(data_list):
     validation_data = model_obj.getcustomattribute('validation_data')
     if not validation_data:
         validation_data.append(['date_time', 'skuloc', 'item_nbr', 'on_hand', ' due_in', ' due_out',
-                                'lt_forecast_demand_sum', 'inventory position raw', 'inventory_position', 'lead_time',
+                                'lt_forecast_demand_sum', 'lt_forecast_demand_sum_effective', 'inventory position raw',
+                                'inventory_position', 'lead_time',
                                 'lead_time_mean', 'lead_time_stddev', 'rem_forecast_mean', 'rem_forecast_stddev',
                                 'service_level', 'z', 'ss_raw', 'reorder_point', 'lt_forecast_sum', 'order_up_to',
                                 'rem_forecast_sum', 'end_state_probability', ' replenish_order',
