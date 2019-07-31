@@ -76,12 +76,12 @@ def main(site_obj, product_obj, order_quantity):
     ss_raw = z * math.sqrt((lead_time_mean * rem_forecast_stddev**2) + (rem_forecast_mean * lead_time_stddev)**2)
     reorder_point = round(ss_raw)
 
-    # compute the order up to level (max) as sum of forecasted demand during lead time. Round answer to ceiling integer
-    order_up_to = math.ceil(lt_forecast_sum)
-
     # calculate future inventory position. Inputs: on hand, due-in, due-out, current date, forecast over lead time
     inventory_position_raw = on_hand - order_quantity + due_in - due_out - lt_forecast_demand_sum_effective
     inventory_position = round(inventory_position_raw)
+
+    # compute the order up to level (max) as sum of forecasted demand during lead time. Round answer to ceiling integer
+    order_up_to = math.ceil(lt_forecast_sum + (reorder_point - inventory_position))
 
     # replenish decision: if inventory position <= min (calc'ed reorder point) AND
     #    total remaining forecast > end state probability then
