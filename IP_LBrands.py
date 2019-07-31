@@ -6,9 +6,11 @@ from on hand - current order qty (if any) + due-in(total, not limited by lead ti
 
  change version 1.0.1 Changed inventory position formula to: on-hand - order quantity + due-in - due-out -
  lt_forecast_demand_sum_effective   where lt_forecast_demand_sum_effective = min(on-hand, lt_forecast_demand_sum)
+
+ change version 1.0.2 Changed reorder point to max ( round(safety stock), input reorder point)
  """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 import sys
 import datetime
@@ -74,7 +76,7 @@ def main(site_obj, product_obj, order_quantity):
     service_level = float(site_product_obj.getcustomattribute('service_level'))
     z = utilities_LBrands.z_score_lookup(service_level)
     ss_raw = z * math.sqrt((lead_time_mean * rem_forecast_stddev**2) + (rem_forecast_mean * lead_time_stddev)**2)
-    reorder_point = round(ss_raw)
+    reorder_point = max(round(ss_raw), site_product_obj.reorderpoint)
 
     # compute the order up to level (max) as sum of forecasted demand during lead time. Round answer to ceiling integer
     order_up_to = math.ceil(lt_forecast_sum)
