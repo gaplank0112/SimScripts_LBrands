@@ -76,7 +76,8 @@ def main(site_obj, product_obj, order_quantity):
     service_level = float(site_product_obj.getcustomattribute('service_level'))
     z = utilities_LBrands.z_score_lookup(service_level)
     ss_raw = z * math.sqrt((lead_time_mean * rem_forecast_stddev**2) + (rem_forecast_mean * lead_time_stddev)**2)
-    reorder_point = max(round(ss_raw), site_product_obj.reorderpoint)
+    input_reorder_point = site_product_obj.reorderpoint
+    reorder_point = max(round(ss_raw), input_reorder_point)
 
     # compute the order up to level (max) as sum of forecasted demand during lead time. Round answer to ceiling integer
     order_up_to = math.ceil(lt_forecast_sum)
@@ -119,7 +120,8 @@ def main(site_obj, product_obj, order_quantity):
         validation_data_list = [sim_server.NowAsString(), site_name, product_name, on_hand, due_in, due_out,
                                 lt_forecast_demand_sum, lt_forecast_demand_sum_effective, inventory_position_raw,
                                 inventory_position, lead_time, lead_time_mean, lead_time_stddev, rem_forecast_mean,
-                                rem_forecast_stddev, service_level, z, ss_raw, reorder_point, lt_forecast_sum,
+                                rem_forecast_stddev, service_level, z, ss_raw, input_reorder_point, reorder_point,
+                                lt_forecast_sum,
                                 order_up_to, rem_forecast_sum, end_state_probability, replenish_order,
                                 replenishment_quantity]
         record_validation(validation_data_list)
@@ -141,7 +143,8 @@ def record_validation(data_list):
                                 'lt_forecast_demand_sum', 'lt_forecast_demand_sum_effective', 'inventory position raw',
                                 'inventory_position', 'lead_time',
                                 'lead_time_mean', 'lead_time_stddev', 'rem_forecast_mean', 'rem_forecast_stddev',
-                                'service_level', 'z', 'ss_raw', 'reorder_point', 'lt_forecast_sum', 'order_up_to',
+                                'service_level', 'z', 'ss_raw', 'input_reorder_point', 'reorder_point',
+                                'lt_forecast_sum', 'order_up_to',
                                 'rem_forecast_sum', 'end_state_probability', ' replenish_order',
                                 'replenishment_quantity'])
     validation_data.append(data_list)
