@@ -102,6 +102,10 @@ def main():
             apply_site_product_data('service_level', site_product_obj, service_level_override)
             apply_site_product_data('target_WOS', site_product_obj, target_wos_override)
 
+            # add the first forecast date for access later
+            first_forecast_date = get_first_forecast(site_product_obj)
+            site_product_obj.setcustomattribute('first_forecast_date', first_forecast_date)
+
     debug_obj.trace(low, 'Initialize Model complete')
 
 
@@ -366,3 +370,20 @@ def add_z_score_table():
     z_score_table[85.0] = 1.04
     z_score_table[50.0] = 0.00
     return z_score_table
+
+
+def get_first_forecast(site_product_obj):
+    first_date = model_obj.starttime
+    debug_obj.trace(1, 'DELETE start time %s' % first_date)
+
+    # get the forecast dictionary for this site product. If it empty, apply the model start time
+    forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
+    if utilities_LBrands.is_empty(forecast_dict):
+        return first_date
+
+    # get the list of dates with a forecast and then find the earliest date with a forecast
+    date_list = forecast_dict.keys()
+    date_list = sorted(date_list)
+    first_date = date_list[0]
+    debug_obj.trace(1, 'DELETE first forecast %s' % first_date)
+    return first_date

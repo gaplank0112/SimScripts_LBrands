@@ -34,10 +34,8 @@ def main():
                 debug_obj.trace(med, ' The forecast dictionary is empty. Skipping this site-product')
                 continue
 
-            # get the list of dates with a forecast and then find the earliest date with a forecast
-            date_list = forecast_dict.keys()
-            date_list = sorted(date_list)
-            first_forecast = date_list[0]
+            # get the first forecast date determined during initialization
+            first_forecast = site_product_obj.getcustomattribute('first_forecast_date')
 
             # get the target WOS and multiply by 7 (WOS is assumed to be in weeks).
             # sum the forecasted values from the first forecast date to first forecast date + wos days. round up.
