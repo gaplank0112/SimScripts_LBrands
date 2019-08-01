@@ -88,9 +88,6 @@ def main(site_obj, product_obj, order_quantity):
     input_reorder_point = site_product_obj.reorderpoint
     reorder_point = max(round(ss_raw), input_reorder_point)
 
-    # compute the order up to level (max) as sum of forecasted demand during lead time. Round answer to ceiling integer
-    order_up_to = math.ceil(lt_forecast_sum)
-
     # calculate future inventory position. Inputs: on hand, due-in, due-out, current date, forecast over lead time
     inventory_position_raw = on_hand - order_quantity + due_in - due_out - lt_forecast_demand_sum_effective
     inventory_position = round(inventory_position_raw)
@@ -108,6 +105,7 @@ def main(site_obj, product_obj, order_quantity):
             replenish_order = True
 
     replenishment_quantity = None
+    order_placed = None
     if replenish_order is True:
         replenishment_quantity = float(order_up_to - inventory_position)
         replenishment_quantity = math.ceil(replenishment_quantity)
@@ -117,12 +115,17 @@ def main(site_obj, product_obj, order_quantity):
             try:
                 sim_server.CreateOrder(product_name, replenishment_quantity, site_name)
                 debug_obj.trace(med, ' Replenishment order of %s units placed' % replenishment_quantity)
+                order_placed = True
             except:
                 debug_obj.trace(1, ' Replenishment order failed for %s units %s %s at %s'
                                 % (replenishment_quantity, site_obj.name, product_obj.name, sim_server.NowAsString()))
                 utilities_LBrands.log_error('Replenishment order failed for %s units %s %s at %s'
                                             % (replenishment_quantity, site_obj.name, product_obj.name,
                                                sim_server.NowAsString()))
+                order_placed = False
+        else:
+            debug_obj.trace(1, ' Replenishment quantity < 0.0. No order placed.')
+            order_placed = False
     else:
         debug_obj.trace(med, ' No replenishment required at this time')
 
@@ -135,7 +138,7 @@ def main(site_obj, product_obj, order_quantity):
                                 rem_forecast_stddev, service_level, z, ss_raw, input_reorder_point, reorder_point,
                                 lt_forecast_sum,
                                 order_up_to, rem_forecast_sum, end_state_probability, replenish_order,
-                                replenishment_quantity]
+                                replenishment_quantity, order_placed]
         record_validation(validation_data_list)
 
 
@@ -158,7 +161,7 @@ def record_validation(data_list):
                                 'service_level', 'z', 'ss_raw', 'input_reorder_point', 'reorder_point',
                                 'lt_forecast_sum', 'order_up_to',
                                 'rem_forecast_sum', 'end_state_probability', ' replenish_order',
-                                'replenishment_quantity'])
+                                'replenishment_quantity', 'order_placed'])
     validation_data.append(data_list)
     model_obj.setcustomattribute('validation_data', validation_data)
 

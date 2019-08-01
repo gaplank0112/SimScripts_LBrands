@@ -18,13 +18,13 @@ def main():
     write_daily_inventory_bool = model_obj.getcustomattribute('write_daily_inventory')
     if write_daily_inventory_bool is True:
         daily_inventory = model_obj.getcustomattribute('daily_inventory')
-        datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Daily_Inventory.txt'
+        datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Daily_Inventory.csv'
         write_data(daily_inventory, datafile, 'wb', ',')
 
     write_validation_bool = model_obj.getcustomattribute('write_validation')
     if write_validation_bool is True:
         validation_data = model_obj.getcustomattribute('validation_data')
-        datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Validation.txt'
+        datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Validation.csv'
         write_data(validation_data, datafile, 'wb', ',')
 
     # write anything from the script error log
