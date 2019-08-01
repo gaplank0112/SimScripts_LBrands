@@ -4,15 +4,18 @@ from on hand - current order qty (if any) + due-in(total, not limited by lead ti
  by lead time) - forecasted demand over lead time. In addition, the remaining forecast is summed and compared
  against an end state probabiltiy value to determine if orders will be generated regardless of inventory position.
 
- change version 1.0.1 Changed inventory position formula to: on-hand - order quantity + due-in - due-out -
+change version 1.0.1 Changed inventory position formula to: on-hand - order quantity + due-in - due-out -
  lt_forecast_demand_sum_effective   where lt_forecast_demand_sum_effective = min(on-hand, lt_forecast_demand_sum)
 
- change version 1.0.2 Changed reorder point to max ( round(safety stock), input reorder point)
+change version 1.0.2 Changed reorder point to max ( round(safety stock), input reorder point)
      changed order up to: order_up_to = math.ceil(lt_forecast_sum + (reorder_point - inventory_position))
      added exit function if current date is less than first forecast date
+
+change version 1.0.3 Removed order up to calculation. Updated replenishment quantity calculation to
+replenishment quantity = math.ceil(lt_forecast_sum + (reorder_point - inventory_position))
  """
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 import sys
 import datetime
@@ -92,9 +95,6 @@ def main(site_obj, product_obj, order_quantity):
     inventory_position_raw = on_hand - order_quantity + due_in - due_out - lt_forecast_demand_sum_effective
     inventory_position = round(inventory_position_raw)
 
-    # compute the order up to level (max) as sum of forecasted demand during lead time. Round answer to ceiling integer
-    order_up_to = math.ceil(lt_forecast_sum + (reorder_point - inventory_position))
-
     # replenish decision: if inventory position <= min (calc'ed reorder point) AND
     #    total remaining forecast > end state probability then
     #    trigger replenishment
@@ -107,8 +107,7 @@ def main(site_obj, product_obj, order_quantity):
     replenishment_quantity = None
     order_placed = None
     if replenish_order is True:
-        replenishment_quantity = float(order_up_to - inventory_position)
-        replenishment_quantity = math.ceil(replenishment_quantity)
+        replenishment_quantity = math.ceil(lt_forecast_sum + (reorder_point - inventory_position))
         if replenishment_quantity > 0.0:
             debug_obj.trace(med, '  Need replenishment: %s units of %s for %s'
                             % (replenishment_quantity, product_name, site_name))
@@ -137,7 +136,7 @@ def main(site_obj, product_obj, order_quantity):
                                 inventory_position, lead_time, lead_time_mean, lead_time_stddev, rem_forecast_mean,
                                 rem_forecast_stddev, service_level, z, ss_raw, input_reorder_point, reorder_point,
                                 lt_forecast_sum,
-                                order_up_to, rem_forecast_sum, end_state_probability, replenish_order,
+                                rem_forecast_sum, end_state_probability, replenish_order,
                                 replenishment_quantity, order_placed]
         record_validation(validation_data_list)
 
@@ -159,7 +158,7 @@ def record_validation(data_list):
                                 'inventory_position', 'lead_time',
                                 'lead_time_mean', 'lead_time_stddev', 'rem_forecast_mean', 'rem_forecast_stddev',
                                 'service_level', 'z', 'ss_raw', 'input_reorder_point', 'reorder_point',
-                                'lt_forecast_sum', 'order_up_to',
+                                'lt_forecast_sum',
                                 'rem_forecast_sum', 'end_state_probability', ' replenish_order',
                                 'replenishment_quantity', 'order_placed'])
     validation_data.append(data_list)
