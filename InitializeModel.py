@@ -165,7 +165,7 @@ def import_forecast(global_variable, datafile):
         csv_t = csv.reader(ExternalFile)
 
         # set the expected column names
-        column_names = ['skuloc', 'item_nbr', 'start_dt', 'dfu_total_forecast_qty']
+        column_names = ['skuloc', 'item_nbr', 'start_dt', 'dfu_total_forecast_qty', 'snapshot_dt']
         # get the column numbers based on header names
         header = next(csv_t)
         if check_header_name(global_variable, header, column_names) is True:
@@ -173,11 +173,13 @@ def import_forecast(global_variable, datafile):
             product_col = header.index(column_names[1])
             date_col = header.index(column_names[2])
             qty_col = header.index(column_names[3])
+            snap_col = header.index(column_names[4])
 
             # Get the forecast values by row.
             for row in csv_t:
                 site = row[site_col].zfill(4)  # zfill adds leading zeros
                 sku = row[product_col]
+                snapshot_dt = datetime.datetime.strptime(row[snap_col], "%m/%d/%Y")
                 forecast_date = datetime.datetime.strptime(row[date_col], "%m/%d/%Y")
                 forecast_value = float(row[qty_col])
 
@@ -191,10 +193,16 @@ def import_forecast(global_variable, datafile):
                 else:
                     global_forecast_dict[site][sku] = {}
 
-                if forecast_date in global_forecast_dict[site][sku]:
+                if snapshot_dt in global_forecast_dict[site][sku]:
                     pass
                 else:
-                    global_forecast_dict[site][sku][forecast_date] = forecast_value
+                    global_forecast_dict[site][sku][snapshot_dt] = {}
+
+                if forecast_date in global_forecast_dict[site][sku][snapshot_dt]:
+                    pass
+                else:
+                    global_forecast_dict[site][sku][snapshot_dt][forecast_date] = forecast_value
+
     return global_forecast_dict
 
 
@@ -374,16 +382,20 @@ def add_z_score_table():
 
 def get_first_forecast(site_product_obj):
     first_date = model_obj.starttime
-    debug_obj.trace(1, 'DELETE start time %s' % first_date)
 
     # get the forecast dictionary for this site product. If it empty, apply the model start time
     forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
     if utilities_LBrands.is_empty(forecast_dict):
         return first_date
 
+    # get the list of snapshot dates. use the earliest to get the first forecast list
+    snapshot_list = forecast_dict.keys()
+    snapshot_list = sorted(snapshot_list)
+    first_snapshot = snapshot_list[0]
+
     # get the list of dates with a forecast and then find the earliest date with a forecast
-    date_list = forecast_dict.keys()
+    first_forecast = forecast_dict[first_snapshot]
+    date_list = first_forecast.keys()
     date_list = sorted(date_list)
     first_date = date_list[0]
-    debug_obj.trace(1, 'DELETE first forecast %s' % first_date)
     return first_date

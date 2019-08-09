@@ -28,7 +28,7 @@ def list_mean(data_list):
     return sum(data_list) / len(data_list)
 
 
-def get_forecast_values(site_name, product_name, start_date, forecast_window):
+def get_forecast_values(site_name, product_name, snapshot_date, start_date, forecast_window):
     # get the site_product
     site_obj = get_site(site_name)
     site_product_obj = site_obj.getsiteproduct(product_name)
@@ -39,6 +39,19 @@ def get_forecast_values(site_name, product_name, start_date, forecast_window):
     # get the forecast_dict for the site_product
     forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
 
+    # find the snapshot date to match the input date (may be a range)
+    snapshot_dates = forecast_dict.keys()
+    snapshot_dates = sorted(snapshot_dates)
+    x = 1
+    forecast_snapshot_dt = snapshot_dates[1] # by default, we pick the forecast from the last snapshot date
+    for n in range(0,len(snapshot_dates)):
+        if snapshot_dates[x-1] <= snapshot_date < snapshot_dates[x]:
+            forecast_snapshot_dt = snapshot_dates[x-1]
+            break
+        x += 1
+
+    # get the forecast values for the given snapshot date
+    forecast_dict = forecast_dict[forecast_snapshot_dt]
     # get the list of dates in the dictionary (keys) and then collect the dates between start and end
     value_list = []
     date_keys = forecast_dict.keys()

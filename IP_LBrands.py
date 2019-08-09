@@ -69,17 +69,20 @@ def main(site_obj, product_obj, order_quantity):
     forecast_offset = lead_time
     end_state_probability = float(site_product_obj.getcustomattribute('end_state_probability'))
 
-    lt_demand_values = utilities_LBrands.get_forecast_values(site_name, product_name, current_date_dt, lead_time)
+    lt_demand_values = utilities_LBrands.get_forecast_values(site_name, product_name,
+                                                             current_date_dt, current_date_dt, lead_time)
     lt_forecast_demand_sum = sum(lt_demand_values)
     lt_forecast_demand_sum_effective = min(on_hand, lt_forecast_demand_sum)
 
     offset_start = current_date_dt + datetime.timedelta(days=forecast_offset)
-    lt_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name, offset_start, lead_time)
+    lt_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name, current_date_dt,
+                                                               offset_start, lead_time)
     lt_forecast_sum = sum(lt_forecast_values)
     lt_forecast_mean = utilities_LBrands.list_mean(lt_forecast_values)
     lt_forecast_stddev = utilities_LBrands.list_stddev(lt_forecast_values)
 
-    rem_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name, current_date_dt, 9999.0)
+    rem_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name,
+                                                                current_date_dt, current_date_dt, 9999.0)
     rem_forecast_sum = sum(rem_forecast_values)
     rem_forecast_mean = utilities_LBrands.list_mean(rem_forecast_values)
     rem_forecast_stddev = utilities_LBrands.list_stddev(rem_forecast_values)
@@ -139,6 +142,8 @@ def main(site_obj, product_obj, order_quantity):
                                 rem_forecast_sum, end_state_probability, replenish_order,
                                 replenishment_quantity, order_placed]
         record_validation(validation_data_list)
+
+    debug_obj.trace(1, 'IP_LBrands complete')
 
 
 def record_on_hand_inventory(site_product_obj):

@@ -34,6 +34,11 @@ def main():
                 debug_obj.trace(med, ' The forecast dictionary is empty. Skipping this site-product')
                 continue
 
+            # get the first snapshot date
+            snapshot_dates = forecast_dict.keys()
+            snapshot_dates = sorted(snapshot_dates)
+            first_snapshot = snapshot_dates[0]
+
             # get the first forecast date determined during initialization
             first_forecast = site_product_obj.getcustomattribute('first_forecast_date')
 
@@ -41,11 +46,13 @@ def main():
             # sum the forecasted values from the first forecast date to first forecast date + wos days. round up.
             target_wos = float(site_product_obj.getcustomattribute('target_WOS')) * 7.0
             target_wos -= 1.0
+            debug_obj.trace(1, 'DELETE %s, %s, %s, %s, %s'
+                            % (site_obj.name, site_product_obj.product.name,
+                               first_snapshot, first_forecast, target_wos))
             forecast_quantity = utilities_LBrands.get_forecast_values(site_obj.name, site_product_obj.product.name,
-                                                                      first_forecast, target_wos)
+                                                                      first_snapshot, first_forecast, target_wos)
+            debug_obj.trace(1, 'DELETE forecast_quantity %s' % forecast_quantity)
             wos_order_quantity = math.ceil(sum(forecast_quantity))
-            debug_obj.trace(1, 'DELETE %s, %s, %s, %s' % (first_forecast, target_wos, wos_order_quantity,
-                                                              forecast_quantity))
 
             # if the wos_order_quantity = 0.0, skip this site product
             if wos_order_quantity == 0.0:
