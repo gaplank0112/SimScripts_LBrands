@@ -57,16 +57,15 @@ def main():
             site_product_obj.setcustomattribute('service_level', default_service_level)
             site_product_obj.setcustomattribute('target_WOS', default_target_wos)
             site_product_obj.setcustomattribute('IP_check', True)
-
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
     global_forecast_dict = {}
     global_variable = 'FORECAST FILE'
     datafile = check_global_variable(global_variable_dict, global_variable)
+
     if datafile != 0:
         datafile = check_relative_path(datafile)
         if check_datafile(datafile, 'r', global_variable) is True:
             global_forecast_dict = import_forecast(global_variable, datafile)
-
     # read in end state probability overrides
     end_state_override = {}
     global_variable = 'OVERRIDE ENDSTATE PROB'
@@ -163,7 +162,6 @@ def import_forecast(global_variable, datafile):
     # open the forecast file
     with open(datafile) as ExternalFile:
         csv_t = csv.reader(ExternalFile)
-
         # set the expected column names
         column_names = ['skuloc', 'item_nbr', 'start_dt', 'dfu_total_forecast_qty', 'snapshot_dt']
         # get the column numbers based on header names
@@ -179,8 +177,8 @@ def import_forecast(global_variable, datafile):
             for row in csv_t:
                 site = row[site_col].zfill(4)  # zfill adds leading zeros
                 sku = row[product_col]
-                snapshot_dt = datetime.datetime.strptime(row[snap_col], "%m/%d/%Y")
-                forecast_date = datetime.datetime.strptime(row[date_col], "%m/%d/%Y")
+                snapshot_dt = utilities_LBrands.get_datetime(row[snap_col])
+                forecast_date = utilities_LBrands.get_datetime(row[date_col])
                 forecast_value = float(row[qty_col])
 
                 if site in global_forecast_dict:
@@ -202,6 +200,13 @@ def import_forecast(global_variable, datafile):
                     pass
                 else:
                     global_forecast_dict[site][sku][snapshot_dt][forecast_date] = forecast_value
+
+        else:
+            debug_obj.trace(1, 'There is a problem with the headers in the forecast file. Expecting to find headers: '
+                               ' skuloc, item_nbr, start_dt, dfu_total_forecast_qty, snapshot_dt')
+            utilities_LBrands.log_error('Error: There is a problem with the headers in the forecast file. '
+                                        'Expecting to find headers: '
+                                        ' skuloc, item_nbr, start_dt, dfu_total_forecast_qty, snapshot_dt')
 
     return global_forecast_dict
 
