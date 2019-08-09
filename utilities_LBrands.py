@@ -42,13 +42,18 @@ def get_forecast_values(site_name, product_name, snapshot_date, start_date, fore
     # find the snapshot date to match the input date (may be a range)
     snapshot_dates = forecast_dict.keys()
     snapshot_dates = sorted(snapshot_dates)
-    x = 1
+    debug_obj.trace(1, 'DELETE sorted snapshot dates %s' % snapshot_dates)
+    debug_obj.trace(1, 'DELETE len s dates %s' % len(snapshot_dates))
     forecast_snapshot_dt = snapshot_dates[1] # by default, we pick the forecast from the last snapshot date
-    for n in range(0,len(snapshot_dates)):
-        if snapshot_dates[x-1] <= snapshot_date < snapshot_dates[x]:
-            forecast_snapshot_dt = snapshot_dates[x-1]
+    debug_obj.trace(1, 'DELETE %s, %s, default snapshot %s' %
+                    (site_obj.name, site_product_obj.product.name, forecast_snapshot_dt))
+    for n in range(1,len(snapshot_dates)):
+        if snapshot_dates[n-1] <= snapshot_date < snapshot_dates[n]:
+            forecast_snapshot_dt = snapshot_dates[n-1]
             break
-        x += 1
+
+    debug_obj.trace(1, 'DELETE input date %s, forecast snapshot date %s' % (snapshot_date, forecast_snapshot_dt))
+
 
     # get the forecast values for the given snapshot date
     forecast_dict = forecast_dict[forecast_snapshot_dt]
