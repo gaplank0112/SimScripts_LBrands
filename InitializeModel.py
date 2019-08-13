@@ -424,13 +424,14 @@ def get_dict_lead_times():
         if lane_obj.modes is not None:
             mode_lead_times = []
             for mode_obj in lane_obj.modes:
-                # TODO: mode_lead_times.append(sample_lead_time(mode_obj.transportationtime))
-                mode_lead_times.append(mode_obj.transportationtime.valueinseconds)
-
-            lead_time_mean = utilities_LBrands.list_mean(mode_lead_times) / 86400.0 # time in days
-            lead_time_stddev = utilities_LBrands.list_stddev(mode_lead_times) / 86400.0 # time in days
+                # sample the transport time field in case it is stochastic
+                for i in [10001]:
+                    mode_lead_times.append(mode_obj.transportationtime.valueinseconds)
         else:
-            lead_time_mean, lead_time_stddev = 0.0, 0.0
+            mode_lead_times = [0.0]
+
+        lead_time_mean = utilities_LBrands.list_mean(mode_lead_times) / 86400.0  # time in days
+        lead_time_stddev = utilities_LBrands.list_stddev(mode_lead_times) / 86400.0  # time in days
 
         if lane_obj.source.name in lanes_dict:
             pass
