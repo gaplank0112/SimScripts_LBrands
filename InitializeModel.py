@@ -58,7 +58,6 @@ def main():
 
     # create the lead time dictionary from transportation/mode times for lookup later
     lead_times_dict = get_dict_lead_times()
-    debug_obj.trace(1, 'DELETE lead times dict %s' % lead_times_dict)
 
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
     global_forecast_dict = {}
@@ -104,6 +103,8 @@ def main():
             apply_site_product_data('service_level', site_product_obj, service_level_override)
             apply_site_product_data('target_WOS', site_product_obj, target_wos_override)
 
+            lead_time_mean, lead_time_stddev = get_lead_time(site_product_obj,lead_times_dict)
+
             site_product_obj.setcustomattribute('lead_time', 7.0)
 
             # add the first forecast date for access later
@@ -121,26 +122,31 @@ def get_model_folder():
     return input_data
 
 
-def get_lead_time(site_product_obj):
+def get_lead_time(site_product_obj, lead_times_dict):
     # this only works for locations that are not make sites. We will need something else for them
     if site_product_obj.sourcingpolicy >= 12:
-        return 0.0
+        return 0.0, 0.0
 
     lead_times = []
     for source_obj in site_product_obj.sources:
         source_name = source_obj.sourcesite.name
         destination_name = site_product_obj.site.name
-        for lane_obj in model_obj.lanes:
-            if lane_obj.source.name == source_name:
-                if lane_obj.destination.name == destination_name:
-                    if lane_obj.modes is not None:
-                        for mode_obj in lane_obj.modes:
-                            lead_times.append(mode_obj.transportationtime.valueinseconds)
+        try:
+            for lane_name in lead_times_dict[source_name][destination_name].keys():
+                if site_product_obj.product.name in lane_name:
+                    lt_mean, lt_stddev = lead_times_dict[source_name][destination_name][lane_name]
+                    return lt_mean, lt_stddev
+            # if we didn't return something that is product specific, we have to try generic lane
+            generic_lane_name = source_name + '_' + destination_name + '_'
+            if lead_times_dict[source_name][destination_name][generic_lane_name] is not None:
+                lt_mean, lt_stddev = lead_times_dict[source_name][destination_name][generic_lane_name]
+                return lt_mean, lt_stddev
+            else:
+                return 0.0, 0.0
+        except:
+            return 0.0, 0.0
 
-    if len(lead_times) == 0:
-        return 0.0
-    else:
-        return (sum(lead_times) / len(lead_times)) / 86400.0  # calculated average in days
+    return 0.0, 0.0
 
 
 def get_gv():
@@ -414,43 +420,29 @@ def get_first_forecast(site_product_obj):
 def get_dict_lead_times():
     lanes_dict = {}
     for lane_obj in model_obj.lanes:
-        debug_obj.trace(1, 'DELETE %s, %s, %s' % (lane_obj.source.name, lane_obj.destination.name, lane_obj.name))
 
         if lane_obj.modes is not None:
             mode_lead_times = []
             for mode_obj in lane_obj.modes:
-                debug_obj.trace(1, 'DELETE mode %s' % mode_obj.name)
                 # TODO: mode_lead_times.append(sample_lead_time(mode_obj.transportationtime))
                 mode_lead_times.append(mode_obj.transportationtime.valueinseconds)
 
             lead_time_mean = utilities_LBrands.list_mean(mode_lead_times) / 86400.0 # time in days
             lead_time_stddev = utilities_LBrands.list_stddev(mode_lead_times) / 86400.0 # time in days
-            debug_obj.trace(1, 'DELETE avg %s, stddev %s' % (lead_time_mean, lead_time_stddev))
-
-            if lane_obj.source.name in lanes_dict:
-                pass
-            else:
-                lanes_dict[lane_obj.source.name] = {}
-
-            if lane_obj.destination.name in lanes_dict[lane_obj.source.name]:
-                pass
-            else:
-                lanes_dict[lane_obj.source.name][lane_obj.destination.name] = {}
-
-            lanes_dict[lane_obj.source.name][lane_obj.destination.name][lane_obj.name] \
-                = (lead_time_mean, lead_time_stddev)
         else:
-            if lane_obj.source.name in lanes_dict:
-                pass
-            else:
-                lanes_dict[lane_obj.source.name] = {}
+            lead_time_mean, lead_time_stddev = 0.0, 0.0
 
-            if lane_obj.destination.name in lanes_dict[lane_obj.source.name]:
-                pass
-            else:
-                lane_obj[lane_obj.source.name][lane_obj.destination.name] = {}
+        if lane_obj.source.name in lanes_dict:
+            pass
+        else:
+            lanes_dict[lane_obj.source.name] = {}
 
-            lanes_dict[lane_obj.source.name][lane_obj.destination.name][lane_obj.name] = \
-                (0.0, 0.0)
+        if lane_obj.destination.name in lanes_dict[lane_obj.source.name]:
+            pass
+        else:
+            lanes_dict[lane_obj.source.name][lane_obj.destination.name] = {}
+
+        lanes_dict[lane_obj.source.name][lane_obj.destination.name][lane_obj.name] \
+            = (lead_time_mean, lead_time_stddev)
 
     return lanes_dict
