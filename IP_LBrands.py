@@ -13,9 +13,11 @@ change version 1.0.2 Changed reorder point to max ( round(safety stock), input r
 
 change version 1.0.3 Removed order up to calculation. Updated replenishment quantity calculation to
 replenishment quantity = math.ceil(lt_forecast_sum + (reorder_point - inventory_position))
+
+change version 1.0.4 added the ability to look at different forecasts by snapshot date
  """
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 import sys
 import datetime
