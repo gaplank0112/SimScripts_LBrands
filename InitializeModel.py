@@ -51,12 +51,11 @@ def main():
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
             site_product_obj.setcustomattribute('forecast_dict', {})
-            lead_time = get_lead_time(site_product_obj)
-            site_product_obj.setcustomattribute('lead_time', lead_time)
             site_product_obj.setcustomattribute('end_state_probability', default_end_state_probability)
             site_product_obj.setcustomattribute('service_level', default_service_level)
             site_product_obj.setcustomattribute('target_WOS', default_target_wos)
             site_product_obj.setcustomattribute('IP_check', True)
+
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
     global_forecast_dict = {}
     global_variable = 'FORECAST FILE'
@@ -100,6 +99,8 @@ def main():
             apply_site_product_data('end_state_probability', site_product_obj, end_state_override)
             apply_site_product_data('service_level', site_product_obj, service_level_override)
             apply_site_product_data('target_WOS', site_product_obj, target_wos_override)
+
+            site_product_obj.setcustomattribute('lead_time', 7.0)
 
             # add the first forecast date for access later
             first_forecast_date = get_first_forecast(site_product_obj)
