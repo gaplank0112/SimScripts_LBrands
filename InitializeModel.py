@@ -51,14 +51,12 @@ def main():
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
             site_product_obj.setcustomattribute('forecast_dict', {})
+            lead_time = get_lead_time(site_product_obj)
+            site_product_obj.setcustomattribute('lead_time', lead_time)
             site_product_obj.setcustomattribute('end_state_probability', default_end_state_probability)
             site_product_obj.setcustomattribute('service_level', default_service_level)
             site_product_obj.setcustomattribute('target_WOS', default_target_wos)
             site_product_obj.setcustomattribute('IP_check', True)
-
-    # read from the transportation/mode times the lead time and add to a dictionary
-    lead_times_dict = get_dict_lead_times()
-
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
     global_forecast_dict = {}
     global_variable = 'FORECAST FILE'
@@ -103,9 +101,6 @@ def main():
             apply_site_product_data('service_level', site_product_obj, service_level_override)
             apply_site_product_data('target_WOS', site_product_obj, target_wos_override)
 
-            # add lead time and lead time std dev
-            site_product_obj.setcustomattribute('lead_time', 7.0)
-
             # add the first forecast date for access later
             first_forecast_date = get_first_forecast(site_product_obj)
             site_product_obj.setcustomattribute('first_forecast_date', first_forecast_date)
@@ -119,29 +114,6 @@ def get_model_folder():
         a = input_data.rfind('\\')
         input_data = input_data[:a]
     return input_data
-
-
-def get_dict_lead_times():
-    lanes_dict = {}
-    for lane_obj in model_obj.lanes:
-        debug_obj.trace(1, 'DELETE %s, %s, %s' % (lane_obj.source.name, lane_obj.destination.name, lane_obj.name))
-        debug_obj.trace(1, 'DELETE len modes = %s' % len(lane_obj.modes))
-        if lane_obj.modes is not None:
-            mode_lead_times = []
-            for mode_obj in lane_obj.modes:
-                # TODO: mode_lead_times.append(sample_lead_time(mode_obj.transportationtime))
-                mode_lead_times.append(mode_obj.transportationtime.valueinseconds)
-
-            lead_time_mean = utilities_LBrands.list_mean(mode_lead_times)
-            lead_time_stddev = utilities_LBrands.list_stddev(mode_lead_times)
-
-            lanes_dict[lane_obj.source.name][lane_obj.destination.name][lane_obj.name] = \
-                (lead_time_mean, lead_time_stddev)
-        else:
-            lanes_dict[lane_obj.source.name][lane_obj.destination.name][lane_obj.name] = \
-                (0.0, 0.0)
-
-    return lanes_dict
 
 
 def get_lead_time(site_product_obj):
