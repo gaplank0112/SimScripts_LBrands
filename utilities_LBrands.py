@@ -49,9 +49,6 @@ def get_forecast_values(site_name, product_name, snapshot_date, start_date, fore
             forecast_snapshot_dt = snapshot_dates[n-1]
             break
 
-    debug_obj.trace(1, 'DELETE input date %s, forecast snapshot date %s' % (snapshot_date, forecast_snapshot_dt))
-
-
     # get the forecast values for the given snapshot date
     forecast_dict = forecast_dict[forecast_snapshot_dt]
     # get the list of dates in the dictionary (keys) and then collect the dates between start and end

@@ -56,6 +56,10 @@ def main():
             site_product_obj.setcustomattribute('target_WOS', default_target_wos)
             site_product_obj.setcustomattribute('IP_check', True)
 
+    # create the lead time dictionary from transportation/mode times for lookup later
+    lead_times_dict = get_dict_lead_times()
+    debug_obj.trace(1, 'DELETE lead times dict %s' % lead_times_dict)
+
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
     global_forecast_dict = {}
     global_variable = 'FORECAST FILE'
@@ -405,3 +409,48 @@ def get_first_forecast(site_product_obj):
     date_list = sorted(date_list)
     first_date = date_list[0]
     return first_date
+
+
+def get_dict_lead_times():
+    lanes_dict = {}
+    for lane_obj in model_obj.lanes:
+        debug_obj.trace(1, 'DELETE %s, %s, %s' % (lane_obj.source.name, lane_obj.destination.name, lane_obj.name))
+
+        if lane_obj.modes is not None:
+            mode_lead_times = []
+            for mode_obj in lane_obj.modes:
+                debug_obj.trace(1, 'DELETE mode %s' % mode_obj.name)
+                # TODO: mode_lead_times.append(sample_lead_time(mode_obj.transportationtime))
+                mode_lead_times.append(mode_obj.transportationtime.valueinseconds)
+
+            lead_time_mean = utilities_LBrands.list_mean(mode_lead_times) / 86400.0 # time in days
+            lead_time_stddev = utilities_LBrands.list_stddev(mode_lead_times) / 86400.0 # time in days
+            debug_obj.trace(1, 'DELETE avg %s, stddev %s' % (lead_time_mean, lead_time_stddev))
+
+            if lane_obj.source.name in lanes_dict:
+                pass
+            else:
+                lanes_dict[lane_obj.source.name] = {}
+
+            if lane_obj.destination.name in lanes_dict[lane_obj.source.name]:
+                pass
+            else:
+                lanes_dict[lane_obj.source.name][lane_obj.destination.name] = {}
+
+            lanes_dict[lane_obj.source.name][lane_obj.destination.name][lane_obj.name] \
+                = (lead_time_mean, lead_time_stddev)
+        else:
+            if lane_obj.source.name in lanes_dict:
+                pass
+            else:
+                lanes_dict[lane_obj.source.name] = {}
+
+            if lane_obj.destination.name in lanes_dict[lane_obj.source.name]:
+                pass
+            else:
+                lane_obj[lane_obj.source.name][lane_obj.destination.name] = {}
+
+            lanes_dict[lane_obj.source.name][lane_obj.destination.name][lane_obj.name] = \
+                (0.0, 0.0)
+
+    return lanes_dict
