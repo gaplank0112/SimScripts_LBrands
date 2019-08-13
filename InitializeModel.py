@@ -104,8 +104,8 @@ def main():
             apply_site_product_data('target_WOS', site_product_obj, target_wos_override)
 
             lead_time_mean, lead_time_stddev = get_lead_time(site_product_obj,lead_times_dict)
-
-            site_product_obj.setcustomattribute('lead_time', 7.0)
+            site_product_obj.setcustomattribute('lead_time', lead_time_mean)
+            site_product_obj.setcustomattribute('lead_time_stddev', lead_time_stddev)
 
             # add the first forecast date for access later
             first_forecast_date = get_first_forecast(site_product_obj)

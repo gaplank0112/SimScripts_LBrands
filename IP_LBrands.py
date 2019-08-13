@@ -15,9 +15,11 @@ change version 1.0.3 Removed order up to calculation. Updated replenishment quan
 replenishment quantity = math.ceil(lt_forecast_sum + (reorder_point - inventory_position))
 
 change version 1.0.4 added the ability to look at different forecasts by snapshot date
+
+change version 1.0.5 refactored lead time lookup for scale
  """
 
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 
 import sys
 import datetime
@@ -65,9 +67,8 @@ def main(site_obj, product_obj, order_quantity):
     due_in = site_product_obj.currentorderquantity
     due_out = site_product_obj.backorderquantity
     lead_time = float(site_product_obj.getcustomattribute('lead_time'))
-    lt_values = [lead_time]  # If we want the model to calculate 'real', we will need to capture those values
-    lead_time_mean = utilities_LBrands.list_mean(lt_values)
-    lead_time_stddev = utilities_LBrands.list_stddev(lt_values)
+    lead_time_mean = float(site_product_obj.getcustomattribute('lead_time'))
+    lead_time_stddev = float(site_product_obj.getcustomattribute('lead_time_stddev'))
     forecast_offset = lead_time
     end_state_probability = float(site_product_obj.getcustomattribute('end_state_probability'))
 
@@ -145,7 +146,7 @@ def main(site_obj, product_obj, order_quantity):
                                 replenishment_quantity, order_placed]
         record_validation(validation_data_list)
 
-    debug_obj.trace(1, 'IP_LBrands complete')
+    debug_obj.trace(low, 'IP_LBrands complete')
 
 
 def record_on_hand_inventory(site_product_obj):
