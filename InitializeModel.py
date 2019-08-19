@@ -108,7 +108,8 @@ def main():
             site_product_obj.setcustomattribute('lead_time_stddev', lead_time_stddev)
 
             # add the first forecast date for access later
-            first_forecast_date = get_first_forecast(site_product_obj)
+            first_snapshot_date, first_forecast_date = get_first_forecast(site_product_obj)
+            site_product_obj.setcustomattribute('first_snapshot_date', first_snapshot_date)
             site_product_obj.setcustomattribute('first_forecast_date', first_forecast_date)
 
     debug_obj.trace(low, 'Initialize Model complete')
@@ -397,24 +398,28 @@ def add_z_score_table():
 
 
 def get_first_forecast(site_product_obj):
-    first_date = model_obj.starttime
-
     # get the forecast dictionary for this site product. If it empty, apply the model start time
     forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
     if utilities_LBrands.is_empty(forecast_dict):
-        return first_date
+        first_snapshot = model_obj.starttime
+        first_date = model_obj.starttime
 
     # get the list of snapshot dates. use the earliest to get the first forecast list
     snapshot_list = forecast_dict.keys()
-    snapshot_list = sorted(snapshot_list)
-    first_snapshot = snapshot_list[0]
+    if len(snapshot_list) == 0:
+        first_snapshot = model_obj.starttime
+        first_date = model_obj.starttime
+    else:
+        snapshot_list = sorted(snapshot_list)
+        first_snapshot = snapshot_list[0]
 
-    # get the list of dates with a forecast and then find the earliest date with a forecast
-    first_forecast = forecast_dict[first_snapshot]
-    date_list = first_forecast.keys()
-    date_list = sorted(date_list)
-    first_date = date_list[0]
-    return first_date
+        # get the list of dates with a forecast and then find the earliest date with a forecast
+        first_forecast = forecast_dict[first_snapshot]
+        date_list = first_forecast.keys()
+        date_list = sorted(date_list)
+        first_date = date_list[0]
+
+    return first_snapshot, first_date
 
 
 def get_dict_lead_times():

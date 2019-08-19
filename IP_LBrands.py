@@ -71,7 +71,6 @@ def main(site_obj, product_obj, order_quantity):
     lead_time_stddev = float(site_product_obj.getcustomattribute('lead_time_stddev'))
     forecast_offset = lead_time
     end_state_probability = float(site_product_obj.getcustomattribute('end_state_probability'))
-
     lt_demand_values = utilities_LBrands.get_forecast_values(site_name, product_name,
                                                              current_date_dt, current_date_dt, lead_time)
     lt_forecast_demand_sum = sum(lt_demand_values)

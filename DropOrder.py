@@ -35,3 +35,5 @@ def main(order_date_key):
                             % (site_name, product_name, sim_server.NowAsString()))
             utilities_LBrands.log_error(' Initial push order failed for %s %s at %s'
                                         % (site_name, product_name, sim_server.NowAsString()))
+
+    debug_obj.trace(low, 'Drop Order complete')

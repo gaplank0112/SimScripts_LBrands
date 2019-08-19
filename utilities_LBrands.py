@@ -50,7 +50,14 @@ def get_forecast_values(site_name, product_name, snapshot_date, start_date, fore
             break
 
     # get the forecast values for the given snapshot date
-    forecast_dict = forecast_dict[forecast_snapshot_dt]
+    try:
+        forecast_dict = forecast_dict[forecast_snapshot_dt]
+    except:
+        msg = 'No forecast found for site %s product %s snapshot date %s' % (site_name, product_name,
+                                                                             forecast_snapshot_dt)
+        debug_obj.trace(low, msg)
+        log_error(msg)
+
     # get the list of dates in the dictionary (keys) and then collect the dates between start and end
     value_list = []
     date_keys = forecast_dict.keys()

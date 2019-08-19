@@ -35,9 +35,7 @@ def main():
                 continue
 
             # get the first snapshot date
-            snapshot_dates = forecast_dict.keys()
-            snapshot_dates = sorted(snapshot_dates)
-            first_snapshot = snapshot_dates[0]
+            first_snapshot_date = site_product_obj.getcustomattribute('first_snapshot_date')
 
             # get the first forecast date determined during initialization
             first_forecast = site_product_obj.getcustomattribute('first_forecast_date')
@@ -47,7 +45,7 @@ def main():
             target_wos = float(site_product_obj.getcustomattribute('target_WOS')) * 7.0
             target_wos -= 1.0
             forecast_quantity = utilities_LBrands.get_forecast_values(site_obj.name, site_product_obj.product.name,
-                                                                      first_snapshot, first_forecast, target_wos)
+                                                                      first_snapshot_date, first_forecast, target_wos)
             wos_order_quantity = math.ceil(sum(forecast_quantity))
 
             # if the wos_order_quantity = 0.0, skip this site product
@@ -60,7 +58,8 @@ def main():
             # the target date
             lead_time = float(site_product_obj.getcustomattribute('lead_time'))
             target_date = first_forecast - datetime.timedelta(days=7.0)
-            order_date = target_date - datetime.timedelta(days=lead_time, seconds=1)
+            order_date = target_date - datetime.timedelta(days=lead_time)
+            order_date = order_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
             # adjust the order date if it is less than the current date so that the order will drop immediately
             current_date = datetime.datetime.utcfromtimestamp(sim_server.Now()) + datetime.timedelta(seconds=1)
