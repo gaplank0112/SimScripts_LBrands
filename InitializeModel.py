@@ -175,7 +175,7 @@ def import_forecast(global_variable, datafile):
     with open(datafile) as ExternalFile:
         csv_t = csv.reader(ExternalFile)
         # set the expected column names
-        column_names = ['skuloc', 'item_nbr', 'start_dt', 'dfu_total_forecast_qty', 'snapshot_dt']
+        column_names = ['skuloc', 'item_nbr', 'fiscal_day', 'dfu_total_forecast_qty', 'snapshot_dt']
         # get the column numbers based on header names
         header = next(csv_t)
         if check_header_name(global_variable, header, column_names) is True:
