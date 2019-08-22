@@ -97,14 +97,18 @@ def z_score_lookup(p_score):
 
 
 def get_datetime(dt):
-    if '-' in dt:
-        if len(dt) > 10:
-            return datetime.datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
-        else:
-            return datetime.datetime.strptime(dt, "%Y-%m-%d")
-    if '/' in dt:
-        if len(dt) > 10:
-            return datetime.datetime.strptime(dt, "%m/%d/%Y %H:%M:%S")
-        else:
-            return datetime.datetime.strptime(dt, "%m/%d/%Y")
+    fmts = [
+        "%Y-%m-%d %H:%M",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+        "%m/%d/%Y %H:%M",
+        "%m/%d/%Y %H:%M:%S",
+        "%m/%d/%Y"
+    ]
+    for fmt in fmts:
+        try:
+            return datetime.datetime.strptime(dt,fmt)
+        except ValueError:
+            pass
+
     return datetime.datetime(1970,1,1)
