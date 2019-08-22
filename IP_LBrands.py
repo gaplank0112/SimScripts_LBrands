@@ -128,8 +128,7 @@ def main(site_obj, product_obj, order_quantity):
                                                sim_server.NowAsString()))
                 order_placed = False
         else:
-            debug_obj.trace(1, ' Replenishment quantity < 0.0 for %s %s at %s. No order placed.'
-                            % (site_name, product_name, sim_server.NowAsString()))
+            debug_obj.trace(1, ' Replenishment quantity < 0.0. No order placed.')
             order_placed = False
     else:
         debug_obj.trace(med, ' No replenishment required at this time')
