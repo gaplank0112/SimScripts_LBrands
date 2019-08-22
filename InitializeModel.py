@@ -187,15 +187,10 @@ def import_forecast(global_variable, datafile):
 
             # Get the forecast values by row.
             for row in csv_t:
-                debug_obj.trace(1, ' DELETE %s' % row[site_col])
                 site = row[site_col].zfill(4)  # zfill adds leading zeros
-                debug_obj.trace(1, ' DELETE %s' % row[product_col])
                 sku = row[product_col]
-                debug_obj.trace(1, ' DELETE %s' % row[snap_col])
                 snapshot_dt = utilities_LBrands.get_datetime(row[snap_col])
-                debug_obj.trace(1, ' DELETE %s' % row[date_col])
                 forecast_date = utilities_LBrands.get_datetime(row[date_col])
-                debug_obj.trace(1, ' DELETE %s' % row[qty_col])
                 forecast_value = float(row[qty_col])
 
                 if site in global_forecast_dict:
