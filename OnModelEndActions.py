@@ -27,6 +27,10 @@ def main():
         datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Validation.csv'
         write_data(validation_data, datafile, 'wb', ',')
 
+        validation_data = model_obj.getcustomattribute('WOS_push_data')
+        datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'WOS_push.csv'
+        write_data(validation_data, datafile, 'wb', ',')
+
     # write anything from the script error log
     error_log = model_obj.getcustomattribute('log_error')
     datafile = model_obj.modelpath + '\\' + 'SIMERROR.TXT'

@@ -121,14 +121,16 @@ def main(site_obj, product_obj, order_quantity):
                 debug_obj.trace(med, ' Replenishment order of %s units placed' % replenishment_quantity)
                 order_placed = True
             except:
-                debug_obj.trace(1, ' Replenishment order failed for %s units %s %s at %s'
-                                % (replenishment_quantity, site_obj.name, product_obj.name, sim_server.NowAsString()))
-                utilities_LBrands.log_error('Replenishment order failed for %s units %s %s at %s'
-                                            % (replenishment_quantity, site_obj.name, product_obj.name,
-                                               sim_server.NowAsString()))
+                msg = ' IP_LBrands Replenishment order failed for %s units %s %s at %s' \
+                      % (replenishment_quantity, site_obj.name, product_obj.name, sim_server.NowAsString())
+                debug_obj.trace(1, msg)
+                utilities_LBrands.log_error(msg)
                 order_placed = False
         else:
-            debug_obj.trace(1, ' Replenishment quantity < 0.0. No order placed.')
+            msg = ' IP_LBrands Replenishment quantity < 0.0 for site %s, sku %s. No order placed at %s.' \
+                  % (site_obj.name, product_obj.name, sim_server.NowAsString())
+            debug_obj.trace(1, msg)
+            utilities_LBrands.log_error(msg)
             order_placed = False
     else:
         debug_obj.trace(med, ' No replenishment required at this time')

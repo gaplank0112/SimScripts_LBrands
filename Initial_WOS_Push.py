@@ -30,8 +30,10 @@ def main():
 
             # get the forecast dictionary for this site product. If it empty, skip and move to the next site product
             forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
+            empty_dict = False
             if utilities_LBrands.is_empty(forecast_dict):
                 debug_obj.trace(med, ' The forecast dictionary is empty. Skipping this site-product')
+                empty_dict = True
                 continue
 
             # get the first snapshot date
@@ -58,8 +60,8 @@ def main():
             # the target date
             lead_time = float(site_product_obj.getcustomattribute('lead_time'))
             target_date = first_forecast - datetime.timedelta(days=7.0)
-            order_date = target_date - datetime.timedelta(days=lead_time)
-            order_date = order_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            order_date_raw = target_date - datetime.timedelta(days=lead_time)
+            order_date = order_date_raw.replace(hour=0, minute=0, second=0, microsecond=0)
 
             # adjust the order date if it is less than the current date so that the order will drop immediately
             current_date = datetime.datetime.utcfromtimestamp(sim_server.Now()) + datetime.timedelta(seconds=1)
@@ -81,6 +83,14 @@ def main():
                 wos_orders_dict[order_date] = [[site_product_obj.site.name, site_product_obj.product.name,
                                                wos_order_quantity]]
 
+            # if we are writing validation data, record it here
+            write_validation_bool = model_obj.getcustomattribute('write_validation')
+            if write_validation_bool is True:
+                validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
+                                        empty_dict, first_snapshot_date, first_forecast, target_wos, forecast_quantity,
+                                        wos_order_quantity, lead_time, target_date, order_date_raw, order_date]
+                record_validation(validation_data_list)
+
     model_obj.setcustomattribute('wos_orders_dict', wos_orders_dict)
 
     for order_date_key in wos_orders_dict.keys():
@@ -88,3 +98,13 @@ def main():
         sim_server.ScheduleCustomEvent('DropOrder', order_date, [order_date_key])
 
     debug_obj.trace(low, 'Initial WOS Push complete')
+
+
+def record_validation(data_list):
+    validation_data = model_obj.getcustomattribute('WOS_push_data')
+    if not validation_data:
+        validation_data.append(['date_time', 'skuloc', 'item_nbr', 'empty_dict_bool', 'first_snapshot_date',
+                                'first_forecast_date', 'target_wos_days', 'forecast_quantity', 'wos_order_quantity',
+                                'lead_time', 'target_date', 'order_date_raw', 'order_date'])
+    validation_data.append(data_list)
+    model_obj.setcustomattribute('WOS_push_data', validation_data)

@@ -40,6 +40,7 @@ def main():
 
     # set custom attributes on the model object
     model_obj.setcustomattribute('daily_inventory', [])  # a container for inventory information
+    model_obj.setcustomattribute('WOS_push_data', [])
     model_obj.setcustomattribute('validation_data', [])
     model_obj.setcustomattribute('write_daily_inventory', write_daily_inventory_bool)
     model_obj.setcustomattribute('write_validation', write_validation_bool)
