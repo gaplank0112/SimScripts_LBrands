@@ -32,7 +32,10 @@ def main():
             forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
             empty_dict = False
             if utilities_LBrands.is_empty(forecast_dict):
-                debug_obj.trace(med, ' The forecast dictionary is empty. Skipping this site-product')
+                msg = ' The forecast dictionary for %s %s is empty. Skipping WOS push' \
+                      % (site_product_obj.site.name, site_product_obj.product.name)
+                debug_obj.trace(med, msg)
+                utilities_LBrands.log_error("".join(['Info:',msg]))
                 empty_dict = True
                 continue
 
@@ -52,7 +55,11 @@ def main():
 
             # if the wos_order_quantity = 0.0, skip this site product
             if wos_order_quantity == 0.0:
-                debug_obj.trace(med, ' The calculated WOS push quantity was 0.0 units. Skipping this site-product')
+                msg = ' The calculated WOS push quantity for %s %s was 0.0 units. Skipping WOS push' \
+                % (site_product_obj.site.name, site_product_obj.product.name)
+                debug_obj.trace(med, msg)
+                utilities_LBrands.log_error("".join(['Info:',msg]))
+
                 continue
 
             # calculate a target date to have product arrive 7 days prior to first forecast

@@ -15,11 +15,19 @@ def main():
     debug_obj.trace(low, 'OnModelEndActions called at %s' % sim_server.NowAsString())
 
     # get the daily inventory data. If output set to True, write out data
-    write_daily_inventory_bool = model_obj.getcustomattribute('write_daily_inventory')
-    if write_daily_inventory_bool is True:
-        daily_inventory = model_obj.getcustomattribute('daily_inventory')
-        datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Daily_Inventory.csv'
-        write_data(daily_inventory, datafile, 'wb', ',')
+    write_bool = model_obj.getcustomattribute('write_daily_inventory')
+    datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Daily_Inventory.csv'
+    data_field = 'daily_inventory'
+    f = open(datafile, "w")
+    f.truncate()
+    f.close()
+    if write_bool is True:
+        data_list = model_obj.getcustomattribute(data_field)
+        with open(datafile, 'wb') as writeFile:
+            writer = csv.writer(writeFile, delimiter=',')
+
+            for list_element in data_list:
+                writer.writerow(list_element)
 
     write_validation_bool = model_obj.getcustomattribute('write_validation')
     if write_validation_bool is True:
