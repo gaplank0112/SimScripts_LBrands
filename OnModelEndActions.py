@@ -18,39 +18,37 @@ def main():
     write_bool = model_obj.getcustomattribute('write_daily_inventory')
     datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Daily_Inventory.csv'
     data_field = 'daily_inventory'
+    write_data(data_field, datafile, write_bool, 'wb', ',')
+
+    write_bool = model_obj.getcustomattribute('write_validation')
+    datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Validation.csv'
+    data_field = 'validation_data'
+    write_data(data_field, datafile, write_bool, 'wb', ',')
+
+    write_bool = model_obj.getcustomattribute('write_validation')
+    datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'WOS_push.csv'
+    data_field = 'WOS_push_data'
+    write_data(data_field, datafile, write_bool, 'wb', ',')
+
+    # write anything from the script error log
+    write_bool = True
+    datafile = model_obj.modelpath + '\\' + 'SIMERROR.TXT'
+    data_field = 'log_error'
+    write_data(data_field, datafile, write_bool, 'ab', '\t')
+
+    debug_obj.trace(med, 'OnModelEndActions complete')
+
+
+def write_data(data_field, datafile, write_bool, mode, separator):
     f = open(datafile, "w")
     f.truncate()
     f.close()
     if write_bool is True:
         data_list = model_obj.getcustomattribute(data_field)
-        with open(datafile, 'wb') as writeFile:
-            writer = csv.writer(writeFile, delimiter=',')
+        with open(datafile, mode) as writeFile:
+            writer = csv.writer(writeFile, delimiter=separator)
 
             for list_element in data_list:
                 writer.writerow(list_element)
 
-    write_validation_bool = model_obj.getcustomattribute('write_validation')
-    if write_validation_bool is True:
-        validation_data = model_obj.getcustomattribute('validation_data')
-        datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'Validation.csv'
-        write_data(validation_data, datafile, 'wb', ',')
 
-        validation_data = model_obj.getcustomattribute('WOS_push_data')
-        datafile = model_obj.getcustomattribute('model_folder') + '\\' + 'WOS_push.csv'
-        write_data(validation_data, datafile, 'wb', ',')
-
-    # write anything from the script error log
-    error_log = model_obj.getcustomattribute('log_error')
-    datafile = model_obj.modelpath + '\\' + 'SIMERROR.TXT'
-    if error_log:
-        write_data(error_log, datafile, 'ab', '\t')
-
-    debug_obj.trace(med, 'OnModelEndActions complete')
-
-
-def write_data(data_list, target_file, mode, separator):
-    with open(target_file, mode) as writeFile:
-        writer = csv.writer(writeFile, delimiter=separator)
-
-        for list_element in data_list:
-            writer.writerow(list_element)
