@@ -88,6 +88,7 @@ def main():
             if write_validation_bool is True:
                 validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
                                         empty_dict, first_snapshot_date, first_forecast, target_wos, forecast_quantity,
+                                        sum(forecast_quantity),
                                         wos_order_quantity, lead_time, target_date, order_date_raw, order_date]
                 record_validation(validation_data_list)
 
@@ -104,7 +105,8 @@ def record_validation(data_list):
     validation_data = model_obj.getcustomattribute('WOS_push_data')
     if not validation_data:
         validation_data.append(['date_time', 'skuloc', 'item_nbr', 'empty_dict_bool', 'first_snapshot_date',
-                                'first_forecast_date', 'target_wos_days', 'forecast_quantity', 'wos_order_quantity',
+                                'first_forecast_date', 'target_wos_days', 'forecast_values', 'forecast_quantity',
+                                'wos_order_quantity',
                                 'lead_time', 'target_date', 'order_date_raw', 'order_date'])
     validation_data.append(data_list)
     model_obj.setcustomattribute('WOS_push_data', validation_data)

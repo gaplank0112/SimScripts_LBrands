@@ -35,8 +35,8 @@ def main():
     default_end_state_probability = global_variable_dict['DEFAULT ENDSTATE PROBABILITY']
     default_service_level = global_variable_dict['DEFAULT SERVICE LEVEL']
     default_target_wos = global_variable_dict['DEFAULT TARGET WOS']
-    write_daily_inventory_bool = bool(global_variable_dict['OUTPUT DAILY INVENTORY'])
-    write_validation_bool = bool(global_variable_dict['OUTPUT IP VALIDATION'])
+    write_daily_inventory_bool = check_bool(global_variable_dict['OUTPUT DAILY INVENTORY'])
+    write_validation_bool = check_bool(global_variable_dict['OUTPUT IP VALIDATION'])
 
     # set custom attributes on the model object
     model_obj.setcustomattribute('daily_inventory', [])  # a container for inventory information
@@ -453,3 +453,17 @@ def get_dict_lead_times():
             = (lead_time_mean, lead_time_stddev)
 
     return lanes_dict
+
+
+def check_bool(s):
+    if s.upper() == 'TRUE':
+        return True
+    elif s.upper() == 'FALSE':
+        return False
+    else:
+        msg = 'Warning: Could not convert value %s for Global Variable Output flag to True or False. ' \
+              'Set value to False.'
+        debug_obj.trace(med, msg)
+        utilities_LBrands.log_error(msg)
+        return False
+
