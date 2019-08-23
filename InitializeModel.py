@@ -48,6 +48,14 @@ def main():
     model_obj.setcustomattribute('log_error', [])
     model_obj.setcustomattribute('z_score_table', add_z_score_table())
 
+    # clear custom output files
+    file_list = [
+        model_obj.getcustomattribute('model_folder') + '\\' + 'WOS_push.csv',
+        model_obj.getcustomattribute('model_folder') + '\\' + 'Validation.csv',
+        model_obj.getcustomattribute('model_folder') + '\\' + 'Daily_Inventory.csv'
+    ]
+    clear_output_files(file_list)
+
     # set custom attributes on each site-product
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
@@ -466,4 +474,14 @@ def check_bool(s):
         debug_obj.trace(med, msg)
         utilities_LBrands.log_error(msg)
         return False
+
+
+def clear_output_files(file_list):
+    for file_name in file_list:
+        try:
+            f = open(file_name, "w")
+            f.truncate()
+            f.close()
+        except ValueError:
+            pass
 
