@@ -37,6 +37,9 @@ def main():
                 debug_obj.trace(med, msg)
                 utilities_LBrands.log_error("".join(['Info:',msg]))
                 empty_dict = True
+                validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
+                                        empty_dict, '', '', '', '', '', '', '', '', '', '']
+                record_validation(validation_data_list)
                 continue
 
             # get the first snapshot date
@@ -59,7 +62,11 @@ def main():
                 % (site_product_obj.site.name, site_product_obj.product.name)
                 debug_obj.trace(med, msg)
                 utilities_LBrands.log_error("".join(['Info:',msg]))
-
+                validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
+                                        empty_dict, first_snapshot_date, first_forecast, target_wos, forecast_quantity,
+                                        sum(forecast_quantity),
+                                        wos_order_quantity, '', '', '', '']
+                record_validation(validation_data_list)
                 continue
 
             # calculate a target date to have product arrive 7 days prior to first forecast
@@ -91,13 +98,11 @@ def main():
                                                wos_order_quantity]]
 
             # if we are writing validation data, record it here
-            write_validation_bool = model_obj.getcustomattribute('write_validation')
-            if write_validation_bool is True:
-                validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
-                                        empty_dict, first_snapshot_date, first_forecast, target_wos, forecast_quantity,
-                                        sum(forecast_quantity),
-                                        wos_order_quantity, lead_time, target_date, order_date_raw, order_date]
-                record_validation(validation_data_list)
+            validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
+                                    empty_dict, first_snapshot_date, first_forecast, target_wos, forecast_quantity,
+                                    sum(forecast_quantity),
+                                    wos_order_quantity, lead_time, target_date, order_date_raw, order_date]
+            record_validation(validation_data_list)
 
     model_obj.setcustomattribute('wos_orders_dict', wos_orders_dict)
 
@@ -109,11 +114,13 @@ def main():
 
 
 def record_validation(data_list):
-    validation_data = model_obj.getcustomattribute('WOS_push_data')
-    if not validation_data:
-        validation_data.append(['date_time', 'skuloc', 'item_nbr', 'empty_dict_bool', 'first_snapshot_date',
-                                'first_forecast_date', 'target_wos_days', 'forecast_values', 'forecast_quantity',
-                                'wos_order_quantity',
-                                'lead_time', 'target_date', 'order_date_raw', 'order_date'])
-    validation_data.append(data_list)
-    model_obj.setcustomattribute('WOS_push_data', validation_data)
+    write_validation_bool = model_obj.getcustomattribute('write_validation')
+    if write_validation_bool is True:
+        validation_data = model_obj.getcustomattribute('WOS_push_data')
+        if not validation_data:
+            validation_data.append(['date_time', 'skuloc', 'item_nbr', 'empty_dict_bool', 'first_snapshot_date',
+                                    'first_forecast_date', 'target_wos_days', 'forecast_values', 'forecast_quantity',
+                                    'wos_order_quantity',
+                                    'lead_time', 'target_date', 'order_date_raw', 'order_date'])
+        validation_data.append(data_list)
+        model_obj.setcustomattribute('WOS_push_data', validation_data)
