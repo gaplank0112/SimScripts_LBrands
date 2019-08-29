@@ -73,7 +73,7 @@ def main():
             # calculate when to drop the order at the source as target - lead time so the product can arrive around
             # the target date
             lead_time = float(site_product_obj.getcustomattribute('lead_time'))
-            target_date = first_forecast - datetime.timedelta(days=7.0)
+            target_date = first_forecast - datetime.timedelta(days=14.0)
             order_date_raw = target_date - datetime.timedelta(days=lead_time)
             order_date = order_date_raw.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -99,9 +99,9 @@ def main():
 
             # if we are writing validation data, record it here
             validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
-                                    empty_dict, first_snapshot_date, first_forecast, target_wos, forecast_quantity,
+                                    first_snapshot_date, first_forecast, target_wos,
                                     sum(forecast_quantity),
-                                    wos_order_quantity, lead_time, target_date, order_date_raw, order_date]
+                                    wos_order_quantity, lead_time, target_date, order_date]
             record_validation(validation_data_list)
 
     model_obj.setcustomattribute('wos_orders_dict', wos_orders_dict)
@@ -118,9 +118,9 @@ def record_validation(data_list):
     if write_validation_bool is True:
         validation_data = model_obj.getcustomattribute('WOS_push_data')
         if not validation_data:
-            validation_data.append(['date_time', 'skuloc', 'item_nbr', 'empty_dict_bool', 'first_snapshot_date',
-                                    'first_forecast_date', 'target_wos_days', 'forecast_values', 'forecast_quantity',
+            validation_data.append(['date_time', 'skuloc', 'item_nbr', 'first_snapshot_date',
+                                    'first_forecast_date', 'target_wos_days', 'forecast_quantity',
                                     'wos_order_quantity',
-                                    'lead_time', 'target_date', 'order_date_raw', 'order_date'])
+                                    'lead_time', 'target_date', 'order_date'])
         validation_data.append(data_list)
         model_obj.setcustomattribute('WOS_push_data', validation_data)
