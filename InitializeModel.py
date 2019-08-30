@@ -439,7 +439,7 @@ def get_dict_lead_times():
             mode_lead_times = []
             for mode_obj in lane_obj.modes:
                 # sample the transport time field in case it is stochastic
-                for i in [10001]:
+                for i in range(10001):
                     mode_lead_times.append(mode_obj.transportationtime.valueinseconds)
         else:
             mode_lead_times = [0.0]
