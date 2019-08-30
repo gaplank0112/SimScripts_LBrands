@@ -434,6 +434,9 @@ def get_first_forecast(site_product_obj):
 def get_dict_lead_times():
     lanes_dict = {}
     for lane_obj in model_obj.lanes:
+        source_name = lane_obj.source.name
+        dest_name = lane_obj.destination.name
+        lane_name = lane_obj.name
 
         if lane_obj.modes is not None:
             mode_lead_times = []
@@ -447,18 +450,17 @@ def get_dict_lead_times():
         lead_time_mean = utilities_LBrands.list_mean(mode_lead_times) / 86400.0  # time in days
         lead_time_stddev = utilities_LBrands.list_stddev(mode_lead_times) / 86400.0  # time in days
 
-        if lane_obj.source.name in lanes_dict:
+        if source_name in lanes_dict:
             pass
         else:
-            lanes_dict[lane_obj.source.name] = {}
+            lanes_dict[source_name] = {}
 
-        if lane_obj.destination.name in lanes_dict[lane_obj.source.name]:
+        if dest_name in lanes_dict[source_name]:
             pass
         else:
-            lanes_dict[lane_obj.source.name][lane_obj.destination.name] = {}
+            lanes_dict[source_name][dest_name] = {}
 
-        lanes_dict[lane_obj.source.name][lane_obj.destination.name][lane_obj.name] \
-            = (lead_time_mean, lead_time_stddev)
+        lanes_dict[source_name][dest_name][lane_name] = (lead_time_mean, lead_time_stddev)
 
     return lanes_dict
 
