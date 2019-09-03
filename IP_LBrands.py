@@ -50,11 +50,13 @@ def main(site_obj, product_obj, order_quantity):
     if site_product_obj.getcustomattribute('IP_check') is False:
         debug_obj.trace(med, 'This site product %s-%s has no forecast. Skipping review'
                         % (site_product_obj.site.name, site_product_obj.product.name))
+        debug_obj.trace(low, 'IP_LBrands complete')
         return None
 
     # if the current date is less than the first forecast date, skip the review
     first_forecast = site_product_obj.getcustomattribute('first_forecast_date')
     if datetime.datetime.utcfromtimestamp(sim_server.Now()) < first_forecast:
+        debug_obj.trace(low, 'IP_LBrands complete')
         debug_obj.trace(med, 'The current date is less than the first forecast %s for site product %s-%s. Skipping'
                              ' review' % (first_forecast, site_product_obj.site.name, site_product_obj.product.name))
         return None
