@@ -36,7 +36,7 @@ def main():
     data_field = 'log_error'
     write_data(data_field, datafile, write_bool, 'ab', '\t')
 
-    debug_obj.trace(med, 'OnModelEndActions complete')
+    debug_obj.trace(low, 'OnModelEndActions complete')
 
 
 def write_data(data_field, datafile, write_bool, mode, separator):
