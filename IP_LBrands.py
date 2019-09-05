@@ -42,9 +42,6 @@ def main(site_obj, product_obj, order_quantity):
     # get the site product object. All the data is on this object
     site_product_obj = site_obj.getsiteproduct(product_obj.name)
 
-    # record the site, product, datetime, on hand inventory for daily output
-    if model_obj.getcustomattribute('write_daily_inventory') is True:
-        record_on_hand_inventory(site_product_obj)
 
     # if there was no forecast loaded for this site - product, skip the review
     if site_product_obj.getcustomattribute('IP_check') is False:
@@ -125,13 +122,13 @@ def main(site_obj, product_obj, order_quantity):
             except:
                 msg = ' IP_LBrands Replenishment order failed for %s units %s %s at %s' \
                       % (replenishment_quantity, site_obj.name, product_obj.name, sim_server.NowAsString())
-                debug_obj.trace(1, msg)
+                debug_obj.trace(low, msg)
                 utilities_LBrands.log_error(msg)
                 order_placed = False
         else:
             msg = ' IP_LBrands Replenishment quantity < 0.0 for site %s, sku %s. No order placed at %s.' \
                   % (site_obj.name, product_obj.name, sim_server.NowAsString())
-            debug_obj.trace(1, msg)
+            debug_obj.trace(low, msg)
             utilities_LBrands.log_error(msg)
             order_placed = False
     else:
@@ -150,15 +147,6 @@ def main(site_obj, product_obj, order_quantity):
         record_validation(validation_data_list)
 
     debug_obj.trace(low, 'IP_LBrands complete')
-
-
-def record_on_hand_inventory(site_product_obj):
-    daily_inventory = model_obj.getcustomattribute('daily_inventory')
-    if not daily_inventory:
-        daily_inventory.append(['date_time', 'skuloc', 'item_nbr', 'on_hand'])
-    daily_inventory.append([sim_server.NowAsString(), site_product_obj.site.name, site_product_obj.product.name,
-                            site_product_obj.inventory])
-    model_obj.setcustomattribute('daily_inventory', daily_inventory)
 
 
 def record_validation(data_list):

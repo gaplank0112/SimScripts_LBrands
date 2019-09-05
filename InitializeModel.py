@@ -64,10 +64,8 @@ def main():
             site_product_obj.setcustomattribute('service_level', default_service_level)
             site_product_obj.setcustomattribute('target_WOS', default_target_wos)
             site_product_obj.setcustomattribute('IP_check', True)
-
     # create the lead time dictionary from transportation/mode times for lookup later
     lead_times_dict = get_dict_lead_times()
-
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
     global_forecast_dict = {}
     global_variable = 'FORECAST FILE'
@@ -103,7 +101,6 @@ def main():
         datafile = check_relative_path(datafile)
         if check_datafile(datafile, 'r', global_variable) is True:
             target_wos_override = import_wos_override(global_variable, datafile)
-
     # apply the custom data dictionaries
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:

@@ -10,10 +10,15 @@ model_obj = sim_server.Model()
 
 
 def main():
+    debug_obj.trace(low, '-'*30)
+    debug_obj.trace(low, 'Inventory report called at %s' % sim_server.NowAsString())
+    daily_inventory = model_obj.getcustomattribute('daily_inventory')
+    if not daily_inventory:
+        daily_inventory.append(['date_time', 'skuloc', 'item_nbr', 'on_hand'])
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
-            daily_inventory = model_obj.getcustomattribute('daily_inventory')
             daily_inventory.append(
                 [sim_server.NowAsString(), site_product_obj.site.name, site_product_obj.product.name,
                  site_product_obj.inventory])
-            model_obj.setcustomattribute('daily_inventory', daily_inventory)
+    model_obj.setcustomattribute('daily_inventory', daily_inventory)
+    debug_obj.trace(low, 'Inventory report complete')
