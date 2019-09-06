@@ -177,6 +177,8 @@ def get_gv():
 
 def import_forecast(global_variable, datafile):
     global_forecast_dict = {}
+    date_dict = {}
+
     # open the forecast file
     with open(datafile) as ExternalFile:
         csv_t = csv.reader(ExternalFile)
@@ -195,9 +197,23 @@ def import_forecast(global_variable, datafile):
             for row in csv_t:
                 site = row[site_col].zfill(4)  # zfill adds leading zeros
                 sku = row[product_col]
-                snapshot_dt = utilities_LBrands.get_datetime(row[snap_col])
-                forecast_date = utilities_LBrands.get_datetime(row[date_col])
+                snapshot_dt = row[snap_col]
+                forecast_date = row[date_col]
                 forecast_value = float(row[qty_col])
+
+                # Check to see if the string date input has already been converted once
+                # By converting the string date input only once, we save SIGNIFICANT time
+                if snapshot_dt in date_dict:
+                    snapshot_dt = date_dict[snapshot_dt]
+                else:
+                    snapshot_dt = utilities_LBrands.get_datetime(snapshot_dt)
+                    date_dict[snapshot_dt] = snapshot_dt
+
+                if forecast_date in date_dict:
+                    forecast_date = date_dict[forecast_date]
+                else:
+                    forecast_date = utilities_LBrands.get_datetime(forecast_date)
+                    date_dict[forecast_date] = forecast_date
 
                 if site in global_forecast_dict:
                     pass
