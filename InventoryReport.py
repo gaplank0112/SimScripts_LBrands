@@ -3,6 +3,7 @@
 import sys
 import sim_server
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
+import IP_LBrands
 
 low, med, high = 2, 5, 9
 debug_obj = sim_server.Debug()
@@ -17,6 +18,7 @@ def main():
         daily_inventory.append(['date_time', 'skuloc', 'item_nbr', 'on_hand'])
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
+            IP_LBrands.main(site_obj, site_product_obj.product, 0)
             daily_inventory.append(
                 [sim_server.NowAsString(), site_product_obj.site.name, site_product_obj.product.name,
                  site_product_obj.inventory])
