@@ -97,18 +97,25 @@ def z_score_lookup(p_score):
 
 
 def get_datetime(dt):
-    fmts = [
-        "%Y-%m-%d %H:%M",
-        "%Y-%m-%d %H:%M:%S",
-        "%Y-%m-%d",
-        "%m/%d/%Y %H:%M",
-        "%m/%d/%Y %H:%M:%S",
-        "%m/%d/%Y"
-    ]
-    for fmt in fmts:
-        try:
-            return datetime.datetime.strptime(dt,fmt)
-        except ValueError:
-            pass
+    date_dict = model_obj.getcustomattribute('date_dict')
+    if dt in date_dict:
+        return date_dict[dt]
+
+    else:
+        fmts = [
+            "%Y-%m-%d %H:%M",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%d",
+            "%m/%d/%Y %H:%M",
+            "%m/%d/%Y %H:%M:%S",
+            "%m/%d/%Y"
+        ]
+        for fmt in fmts:
+            try:
+                date_dict[dt] = datetime.datetime.strptime(dt,fmt)
+                model_obj.setcustomattribute('date_dict', date_dict)
+                return datetime.datetime.strptime(dt,fmt)
+            except ValueError:
+                pass
 
     return datetime.datetime(1970,1,1)
