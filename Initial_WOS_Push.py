@@ -52,7 +52,7 @@ def main():
             # sum the forecasted values from the first forecast date to first forecast date + wos days. round up.
             target_wos = float(site_product_obj.getcustomattribute('target_WOS')) * 7.0
             target_wos -= 1.0
-            forecast_quantity = utilities_LBrands.get_forecast_values(site_obj.name, site_product_obj.product.name,
+            forecast_quantity = utilities_LBrands.get_forecast_values(site_product_obj,
                                                                       first_snapshot_date, first_forecast, target_wos)
             wos_order_quantity = math.ceil(sum(forecast_quantity))
 

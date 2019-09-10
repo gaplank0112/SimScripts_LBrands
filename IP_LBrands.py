@@ -70,19 +70,19 @@ def main(site_obj, product_obj, order_quantity):
     lead_time_stddev = float(site_product_obj.getcustomattribute('lead_time_stddev'))
     forecast_offset = lead_time
     end_state_probability = float(site_product_obj.getcustomattribute('end_state_probability'))
-    lt_demand_values = utilities_LBrands.get_forecast_values(site_name, product_name,
+    lt_demand_values = utilities_LBrands.get_forecast_values(site_product_obj,
                                                              current_date_dt, current_date_dt, lead_time)
     lt_forecast_demand_sum = sum(lt_demand_values)
     lt_forecast_demand_sum_effective = min(on_hand, lt_forecast_demand_sum)
 
     offset_start = current_date_dt + datetime.timedelta(days=forecast_offset)
-    lt_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name, current_date_dt,
+    lt_forecast_values = utilities_LBrands.get_forecast_values(site_product_obj, current_date_dt,
                                                                offset_start, lead_time)
     lt_forecast_sum = sum(lt_forecast_values)
     lt_forecast_mean = utilities_LBrands.list_mean(lt_forecast_values)
     lt_forecast_stddev = utilities_LBrands.list_stddev(lt_forecast_values)
 
-    rem_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name,
+    rem_forecast_values = utilities_LBrands.get_forecast_values(site_product_obj,
                                                                 current_date_dt, current_date_dt, 9999.0)
     rem_forecast_sum = sum(rem_forecast_values)
     rem_forecast_mean = utilities_LBrands.list_mean(rem_forecast_values)

@@ -28,10 +28,7 @@ def list_mean(data_list):
     return sum(data_list) / len(data_list)
 
 
-def get_forecast_values(site_name, product_name, snapshot_date, start_date, forecast_window):
-    # get the site_product
-    site_obj = get_site(site_name)
-    site_product_obj = site_obj.getsiteproduct(product_name)
+def get_forecast_values(site_product_obj, snapshot_date, start_date, forecast_window):
 
     # calculate the end date as start date + forecast window
     end_date = start_date + datetime.timedelta(days=forecast_window)
@@ -53,7 +50,8 @@ def get_forecast_values(site_name, product_name, snapshot_date, start_date, fore
     try:
         forecast_dict = forecast_dict[forecast_snapshot_dt]
     except:
-        msg = 'No forecast found for site %s product %s snapshot date %s' % (site_name, product_name,
+        msg = 'No forecast found for site %s product %s snapshot date %s' % (site_product_obj.site.name,
+                                                                             site_product_obj.product.name,
                                                                              forecast_snapshot_dt)
         debug_obj.trace(low, msg)
         log_error(msg)
