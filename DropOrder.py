@@ -3,6 +3,7 @@ of order details that was generated for this date from the Initial WOS Push scri
 of order details and drop the order"""
 
 import sys
+import time
 import sim_server
 import utilities_LBrands
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
@@ -15,6 +16,7 @@ model_obj = sim_server.Model()
 def main(order_date_key):
     debug_obj.trace(low, '-'*30)
     debug_obj.trace(low, 'Drop Order called at %s' % sim_server.NowAsString())
+    start_time = time.time()
 
     # get the wos orders dictionary from the model object
     wos_orders_dict = model_obj.getcustomattribute('wos_orders_dict')
@@ -36,4 +38,4 @@ def main(order_date_key):
             utilities_LBrands.log_error(' Initial push order failed for %s %s at %s'
                                         % (site_name, product_name, sim_server.NowAsString()))
 
-    debug_obj.trace(low, 'Drop Order complete')
+    debug_obj.trace(low, 'Drop Order complete in %s seconds' % (time.time() - start_time))

@@ -1,6 +1,7 @@
 """On Model End Actions executes a series of custom outputs."""
 
 import sys
+import time
 import csv
 import sim_server
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
@@ -13,6 +14,7 @@ model_obj = sim_server.Model()
 def main():
     debug_obj.trace(low, '-'*30)
     debug_obj.trace(low, 'OnModelEndActions called at %s' % sim_server.NowAsString())
+    start_time = time.time()
 
     # get the daily inventory data. If output set to True, write out data
     write_bool = model_obj.getcustomattribute('write_daily_inventory')
@@ -36,7 +38,7 @@ def main():
     data_field = 'log_error'
     write_data(data_field, datafile, write_bool, 'ab', '\t')
 
-    debug_obj.trace(low, 'OnModelEndActions complete')
+    debug_obj.trace(low, 'OnModelEndActions complete in %s minutes' % ((time.time() - start_time)/60.0))
 
 
 def write_data(data_field, datafile, write_bool, mode, separator):

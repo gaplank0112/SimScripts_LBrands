@@ -9,6 +9,7 @@ __version__ = "1.0.0"
 __status__ = "Production"
 
 import sys
+import time
 import datetime
 import csv
 import sim_server
@@ -27,6 +28,7 @@ t = datetime.time
 def main():
     debug_obj.trace(low, '-'*30)
     debug_obj.trace(low, 'Initialize model called at %s' % sim_server.NowAsString())
+    start_time = time.time()
 
     # read the global variables file.
     global_variable_dict = get_gv()
@@ -58,6 +60,7 @@ def main():
     clear_output_files(file_list)
 
     # set custom attributes on each site-product
+    custom_IP_list = []
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
             site_product_obj.setcustomattribute('forecast_dict', {})
@@ -65,8 +68,17 @@ def main():
             site_product_obj.setcustomattribute('service_level', default_service_level)
             site_product_obj.setcustomattribute('target_WOS', default_target_wos)
             site_product_obj.setcustomattribute('IP_check', True)
+
+            # build a list of site_product_objects using the scripted IP
+            # reset their sourcing policy to Source By Transfer so we don't accidently add more calendar events
+            if site_product_obj.inventorypolicy == 3:
+                custom_IP_list.append(site_product_obj)
+                site_product_obj.sourcingpolicy = 7
+    model_obj.setcustomattribute('custom_IP_list', custom_IP_list)
+
     # create the lead time dictionary from transportation/mode times for lookup later
     lead_times_dict = get_dict_lead_times()
+
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
     global_forecast_dict = {}
     global_variable = 'FORECAST FILE'
@@ -119,7 +131,7 @@ def main():
             site_product_obj.setcustomattribute('first_snapshot_date', first_snapshot_date)
             site_product_obj.setcustomattribute('first_forecast_date', first_forecast_date)
 
-    debug_obj.trace(low, 'Initialize Model complete')
+    debug_obj.trace(low, 'Initialize Model complete in %s minutes' % ((time.time() - start_time)/60.0))
 
 
 def get_model_folder():

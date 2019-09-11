@@ -3,6 +3,7 @@ sums and rounds up the first WOS (weeks) of forecast and sets an event on the ca
 lead time + 7 day prior to the first forecast date with a value."""
 
 import sys
+import time
 import datetime
 import math
 import sim_server
@@ -17,6 +18,7 @@ model_obj = sim_server.Model()
 def main():
     debug_obj.trace(low, '-'*30)
     debug_obj.trace(low, 'Initial WOS push called at %s' % sim_server.NowAsString())
+    start_time = time.time()
 
     # create a dictionary to hold the results by datetime. We only want to schedule one event per datetime, not
     # multiple calls on the same date.
@@ -110,7 +112,7 @@ def main():
         order_date = datetime.datetime.strftime(order_date_key, '%m/%d/%Y %H:%M:%S')
         sim_server.ScheduleCustomEvent('DropOrder', order_date, [order_date_key])
 
-    debug_obj.trace(low, 'Initial WOS Push complete')
+    debug_obj.trace(low, 'Initial WOS Push complete in %s minutes' % ((time.time() - start_time)/60.0))
 
 
 def record_validation(data_list):
