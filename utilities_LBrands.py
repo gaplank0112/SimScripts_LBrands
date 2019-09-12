@@ -5,6 +5,7 @@ import sys
 import datetime
 import sim_server
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
+from bisect import bisect
 
 low, med, high = 2, 5, 9
 debug_obj = sim_server.Debug()
@@ -28,41 +29,28 @@ def list_mean(data_list):
     return sum(data_list) / len(data_list)
 
 
-def get_forecast_values(site_product_obj, snapshot_date, start_date, forecast_window):
-
+def get_forecast_values(site_product_obj, forecast_dict, start_date, forecast_window):
     # calculate the end date as start date + forecast window
     end_date = start_date + datetime.timedelta(days=forecast_window)
 
-    # get the forecast_dict for the site_product
-    forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
-
-    # find the snapshot date to match the input date (may be a range)
-    snapshot_dates = forecast_dict.keys()
-    snapshot_dates = sorted(snapshot_dates)
-    forecast_snapshot_dt = snapshot_dates[-1] # by default, we pick the forecast from the last snapshot date
-
-    for n in range(1,len(snapshot_dates)):
-        if snapshot_dates[n-1] <= snapshot_date < snapshot_dates[n]:
-            forecast_snapshot_dt = snapshot_dates[n-1]
-            break
-
-    # get the forecast values for the given snapshot date
-    try:
-        forecast_dict = forecast_dict[forecast_snapshot_dt]
-    except:
-        msg = 'No forecast found for site %s product %s snapshot date %s' % (site_product_obj.site.name,
-                                                                             site_product_obj.product.name,
-                                                                             forecast_snapshot_dt)
-        debug_obj.trace(low, msg)
-        log_error(msg)
-
     # get the list of dates in the dictionary (keys) and then collect the dates between start and end
-    value_list = []
     date_keys = forecast_dict.keys()
-    for n in date_keys:
-        if start_date <= n <= end_date:
-            value = forecast_dict[n]
-            value_list.append(value)
+    date_keys = sorted(date_keys)
+    # debug_obj.trace(1, 'DELETE here 02-A')
+    start_index = get_index (date_keys, start_date)
+    # debug_obj.trace(1, 'DELETE here 02-B')
+    end_index = get_index(date_keys, end_date)
+    # debug_obj.trace(1, 'DELETE here 02-C')
+
+    date_list = date_keys[start_index:end_index + 1]
+    # debug_obj.trace(1, 'DELETE start idx %s, end idx %s, date_list:' % (start_index, end_index))
+    # debug_obj.trace(1, 'DELETE %s' % date_list)
+    value_list = []
+    for n in date_list:
+        value_list.append(forecast_dict[n])
+    # debug_obj.trace(1, 'DELETE here 02-D')
+    # debug_obj.trace(1, 'DELETE value_list:')
+    # debug_obj.trace(1, 'DELETE %s' % value_list)
 
     return value_list
 
@@ -117,3 +105,51 @@ def get_datetime(dt):
                 pass
 
     return datetime.datetime(1970,1,1)
+
+
+def get_snapshot_forecast(site_product_obj, snapshot_date):
+    '''
+    This method loops through the list of possible forecast snapshots for a site-product and finds the closest
+    :param site_product_obj:
+    :param snapshot_date:
+    :return:
+    '''
+
+    # get the forecast_dict for the site_product
+    forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
+    # debug_obj.trace(1, 'DELETE here 01-A')
+
+    # find the snapshot date to match the input date (may be a range)
+    snapshot_dates = forecast_dict.keys()
+    snapshot_dates = sorted(snapshot_dates)
+    forecast_snapshot_dt = snapshot_dates[-1] # by default, we pick the forecast from the last snapshot date
+    # debug_obj.trace(1, 'DELETE here 01-B')
+    idx = get_index(snapshot_dates, snapshot_date)
+    # debug_obj.trace(1, 'DELETE here 01-C')
+    forecast_snapshot_dt = snapshot_dates[idx]
+    # debug_obj.trace(1, 'DELETE here 01-D')
+    # get the forecast values for the given snapshot date
+    try:
+        forecast_dict = forecast_dict[forecast_snapshot_dt]
+        # debug_obj.trace(1, 'DELETE here 01-E_success')
+        return forecast_dict
+    except:
+        # debug_obj.trace(1, 'DELETE here 01-E_failure')
+        msg = 'No forecast found for site %s product %s snapshot date %s' % (site_product_obj.site.name,
+                                                                             site_product_obj.product.name,
+                                                                             forecast_snapshot_dt)
+        debug_obj.trace(low, msg)
+        log_error(msg)
+
+    return 0
+
+
+def get_index(date_keys, start_date):
+    # debug_obj.trace(1, 'DELETE start_date %s, date_keys: ' % start_date)
+    # debug_obj.trace(1, 'DELETE %s' % date_keys)
+    index = bisect(date_keys, start_date)
+    # debug_obj.trace(1, 'DELETE index = %s' % index)
+    if index == 0:
+        return 0
+    else:
+        return index - 1

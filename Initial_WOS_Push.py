@@ -54,9 +54,14 @@ def main():
             # sum the forecasted values from the first forecast date to first forecast date + wos days. round up.
             target_wos = float(site_product_obj.getcustomattribute('target_WOS')) * 7.0
             target_wos -= 1.0
+            # debug_obj.trace(1, 'DELETE here 01')
+            forecast_dict = utilities_LBrands.get_snapshot_forecast(site_product_obj, first_snapshot_date)
+            # debug_obj.trace(1, 'DELETE here 02')
             forecast_quantity = utilities_LBrands.get_forecast_values(site_product_obj,
-                                                                      first_snapshot_date, first_forecast, target_wos)
+                                                                      forecast_dict, first_forecast, target_wos)
+            # debug_obj.trace(1, 'DELETE here 03')
             wos_order_quantity = math.ceil(sum(forecast_quantity))
+            # debug_obj.trace(1, 'DELETE here 04')
 
             # if the wos_order_quantity = 0.0, skip this site product
             if wos_order_quantity == 0.0:

@@ -39,8 +39,6 @@ def main(site_obj, product_obj, order_quantity):
     debug_obj.trace(low, '-'*30)
     debug_obj.trace(low, 'IP_LBrands called for %s %s at %s'
                     % (site_obj.name, product_obj.name, sim_server.NowAsString()))
-    check_point = 0  # TODO Delete
-    start_time = time.time() # TODO Delete
 
     # get the site product object. All the data is on this object
     site_product_obj = site_obj.getsiteproduct(product_obj.name)
@@ -59,7 +57,6 @@ def main(site_obj, product_obj, order_quantity):
         debug_obj.trace(med, 'The current date is less than the first forecast %s for site product %s-%s. Skipping'
                              ' review' % (first_forecast, site_product_obj.site.name, site_product_obj.product.name))
         return None
-    check_point, start_time = write_check_point(check_point, start_time) # TODO Delete
     # record the parameters for validation output
     current_date_dt = datetime.datetime.utcfromtimestamp(sim_server.Now())
     site_name = site_product_obj.site.name
@@ -72,35 +69,32 @@ def main(site_obj, product_obj, order_quantity):
     lead_time_stddev = float(site_product_obj.getcustomattribute('lead_time_stddev'))
     forecast_offset = lead_time
     end_state_probability = float(site_product_obj.getcustomattribute('end_state_probability'))
+    forecast_dict = utilities_LBrands.get_snapshot_forecast(site_product_obj, current_date_dt)
     lt_demand_values = utilities_LBrands.get_forecast_values(site_product_obj,
-                                                             current_date_dt, current_date_dt, lead_time)
+                                                             forecast_dict, current_date_dt, lead_time)
     lt_forecast_demand_sum = sum(lt_demand_values)
     lt_forecast_demand_sum_effective = min(on_hand, lt_forecast_demand_sum)
-    check_point, start_time = write_check_point(check_point, start_time)  # TODO Delete
     offset_start = current_date_dt + datetime.timedelta(days=forecast_offset)
-    lt_forecast_values = utilities_LBrands.get_forecast_values(site_product_obj, current_date_dt,
+    lt_forecast_values = utilities_LBrands.get_forecast_values(site_product_obj, forecast_dict,
                                                                offset_start, lead_time)
     lt_forecast_sum = sum(lt_forecast_values)
     lt_forecast_mean = utilities_LBrands.list_mean(lt_forecast_values)
     lt_forecast_stddev = utilities_LBrands.list_stddev(lt_forecast_values)
-    check_point, start_time = write_check_point(check_point, start_time)  # TODO Delete
+
     rem_forecast_values = utilities_LBrands.get_forecast_values(site_product_obj,
-                                                                current_date_dt, current_date_dt, 9999.0)
+                                                                forecast_dict, current_date_dt, 9999.0)
     rem_forecast_sum = sum(rem_forecast_values)
     rem_forecast_mean = utilities_LBrands.list_mean(rem_forecast_values)
     rem_forecast_stddev = utilities_LBrands.list_stddev(rem_forecast_values)
-    check_point, start_time = write_check_point(check_point, start_time)  # TODO Delete
     # compute the reorder point using standard safety stock formula. Round answer to nearest integer
     service_level = float(site_product_obj.getcustomattribute('service_level'))
     z = utilities_LBrands.z_score_lookup(service_level)
     ss_raw = z * math.sqrt((lead_time_mean * rem_forecast_stddev**2) + (rem_forecast_mean * lead_time_stddev)**2)
     input_reorder_point = site_product_obj.reorderpoint
     reorder_point = max(round(ss_raw), input_reorder_point)
-    check_point, start_time = write_check_point(check_point, start_time)  # TODO Delete
     # calculate future inventory position. Inputs: on hand, due-in, due-out, current date, forecast over lead time
     inventory_position_raw = on_hand - order_quantity + due_in - due_out - lt_forecast_demand_sum_effective
     inventory_position = round(inventory_position_raw)
-    check_point, start_time = write_check_point(check_point, start_time)  # TODO Delete
     # replenish decision: if inventory position <= min (calc'ed reorder point) AND
     #    total remaining forecast > end state probability then
     #    trigger replenishment
@@ -135,7 +129,6 @@ def main(site_obj, product_obj, order_quantity):
             order_placed = False
     else:
         debug_obj.trace(med, ' No replenishment required at this time')
-    check_point, start_time = write_check_point(check_point, start_time)  # TODO Delete
     # if we are writing validation data, record it here
     write_validation_bool = model_obj.getcustomattribute('write_validation')
     if write_validation_bool is True:
@@ -147,7 +140,6 @@ def main(site_obj, product_obj, order_quantity):
                                 rem_forecast_sum, end_state_probability, replenish_order,
                                 replenishment_quantity, order_placed]
         record_validation(validation_data_list)
-    check_point, start_time = write_check_point(check_point, start_time)  # TODO Delete
     debug_obj.trace(low, 'IP_LBrands complete')
 
 
@@ -164,13 +156,6 @@ def record_validation(data_list):
                                 'replenishment_quantity', 'order_placed'])
     validation_data.append(data_list)
     model_obj.setcustomattribute('validation_data', validation_data)
-
-
-def write_check_point(check_point, start_time):
-    debug_obj.trace(1, 'Checkpoint %s , %s seconds' % (check_point, time.time()-start_time))
-    check_point += 1
-    start_time = time.time()
-    return check_point, start_time
 
 
 # ----------------------- Example s,S script ------------------------
