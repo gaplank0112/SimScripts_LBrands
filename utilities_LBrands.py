@@ -65,7 +65,9 @@ def get_forecast_values(site_name, product_name, snapshot_date, start_date, fore
         if start_date <= n <= end_date:
             value = forecast_dict[n]
             value_list.append(value)
-
+    debug_obj.trace(1, '%s, %s, %s, %s, %s, %s' % (sim_server.NowAsString(), site_product_obj.site.name,
+                                                   site_product_obj.product.name, start_date,
+                                                   end_date, len(value_list)))
     return value_list
 
 
