@@ -45,6 +45,9 @@ def get_forecast_values(site_product_obj, forecast_dict, start_date, forecast_wi
     date_list = date_keys[start_index:end_index + 1]
     # debug_obj.trace(1, 'DELETE start idx %s, end idx %s, date_list:' % (start_index, end_index))
     # debug_obj.trace(1, 'DELETE %s' % date_list)
+    debug_obj.trace(1, '%s, %s, %s, %s, %s, %s' % (sim_server.NowAsString(), site_product_obj.site.name,
+                                                   site_product_obj.prodcut.name, forecast_dict[start_index],
+                                                   forecast_dict[end_index + 1], len(date_list)))
     value_list = []
     for n in date_list:
         value_list.append(forecast_dict[n])

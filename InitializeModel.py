@@ -71,7 +71,7 @@ def main():
 
             # build a list of site_product_objects using the scripted IP
             # reset their sourcing policy to Source By Transfer so we don't accidently add more calendar events
-            if site_product_obj.inventorypolicy == 3:
+            if site_product_obj.inventorypolicy == 3:  # Custom IP policy
                 custom_IP_list.append(site_product_obj)
                 site_product_obj.sourcingpolicy = 7
     model_obj.setcustomattribute('custom_IP_list', custom_IP_list)

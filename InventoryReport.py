@@ -26,5 +26,6 @@ def main():
         daily_inventory.append(
             [sim_server.NowAsString(), site_product_obj.site.name, site_product_obj.product.name,
              site_product_obj.inventory])
+
     model_obj.setcustomattribute('daily_inventory', daily_inventory)
     debug_obj.trace(low, 'Inventory report complete in %s seconds' % (time.time() - start_time))
