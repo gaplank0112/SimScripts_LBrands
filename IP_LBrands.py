@@ -129,23 +129,18 @@ def main(site_obj, product_obj, order_quantity):
             order_placed = False
     else:
         debug_obj.trace(med, ' No replenishment required at this time')
-    # if we are writing validation data, record it here
-    write_validation_bool = model_obj.getcustomattribute('write_validation')
-    if write_validation_bool is True:
-        validation_data_list = [sim_server.NowAsString(), site_name, product_name, on_hand, due_in, due_out,
-                                lt_forecast_demand_sum, lt_forecast_demand_sum_effective, inventory_position_raw,
-                                inventory_position, lead_time, lead_time_mean, lead_time_stddev, rem_forecast_mean,
-                                rem_forecast_stddev, service_level, z, ss_raw, input_reorder_point, reorder_point,
-                                lt_forecast_sum,
-                                rem_forecast_sum, end_state_probability, replenish_order,
-                                replenishment_quantity, order_placed]
-        record_validation(validation_data_list)
-    debug_obj.trace(low, 'IP_LBrands complete')
 
+    # record validation data
+    validation_data_list = [sim_server.NowAsString(), site_name, product_name, on_hand, due_in, due_out,
+                            lt_forecast_demand_sum, lt_forecast_demand_sum_effective, inventory_position_raw,
+                            inventory_position, lead_time, lead_time_mean, lead_time_stddev, rem_forecast_mean,
+                            rem_forecast_stddev, service_level, z, ss_raw, input_reorder_point, reorder_point,
+                            lt_forecast_sum,
+                            rem_forecast_sum, end_state_probability, replenish_order,
+                            replenishment_quantity, order_placed]
 
-def record_validation(data_list):
     validation_data = model_obj.getcustomattribute('validation_data')
-    if not validation_data:
+    if not validation_data:  # if this is the first time and validation data is empty, add in these headers
         validation_data.append(['date_time', 'skuloc', 'item_nbr', 'on_hand', ' due_in', ' due_out',
                                 'lt_forecast_demand_sum', 'lt_forecast_demand_sum_effective', 'inventory position raw',
                                 'inventory_position', 'lead_time',
@@ -154,8 +149,11 @@ def record_validation(data_list):
                                 'lt_forecast_sum',
                                 'rem_forecast_sum', 'end_state_probability', ' replenish_order',
                                 'replenishment_quantity', 'order_placed'])
-    validation_data.append(data_list)
+
+    validation_data.append(validation_data_list)
     model_obj.setcustomattribute('validation_data', validation_data)
+
+    debug_obj.trace(low, 'IP_LBrands complete')
 
 
 # ----------------------- Example s,S script ------------------------

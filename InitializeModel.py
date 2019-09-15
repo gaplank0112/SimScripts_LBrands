@@ -49,7 +49,7 @@ def main():
     model_obj.setcustomattribute('model_folder', get_model_folder())
     model_obj.setcustomattribute('log_error', [])
     model_obj.setcustomattribute('z_score_table', add_z_score_table())
-    model_obj.setcustomattribute('date_dict',{})
+    model_obj.setcustomattribute('date_dict', {})
 
     # clear custom output files
     file_list = [
@@ -122,7 +122,7 @@ def main():
             apply_site_product_data('service_level', site_product_obj, service_level_override)
             apply_site_product_data('target_WOS', site_product_obj, target_wos_override)
 
-            lead_time_mean, lead_time_stddev = get_lead_time(site_product_obj,lead_times_dict)
+            lead_time_mean, lead_time_stddev = get_lead_time(site_product_obj, lead_times_dict)
             site_product_obj.setcustomattribute('lead_time', lead_time_mean)
             site_product_obj.setcustomattribute('lead_time_stddev', lead_time_stddev)
 
@@ -147,7 +147,6 @@ def get_lead_time(site_product_obj, lead_times_dict):
     if site_product_obj.sourcingpolicy >= 12:
         return 0.0, 0.0
 
-    lead_times = []
     for source_obj in site_product_obj.sources:
         source_name = source_obj.sourcesite.name
         destination_name = site_product_obj.site.name
@@ -190,7 +189,6 @@ def get_gv():
 
 def import_forecast(global_variable, datafile):
     global_forecast_dict = {}
-    date_dict = {}
 
     # open the forecast file
     with open(datafile) as ExternalFile:
@@ -498,4 +496,3 @@ def clear_output_files(file_list):
             f.close()
         except ValueError:
             pass
-

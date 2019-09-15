@@ -42,9 +42,6 @@ def main():
 
 
 def write_data(data_field, datafile, write_bool, mode, separator):
-    f = open(datafile, "w")
-    f.truncate()
-    f.close()
     if write_bool is True:
         data_list = model_obj.getcustomattribute(data_field)
         with open(datafile, mode) as writeFile:
