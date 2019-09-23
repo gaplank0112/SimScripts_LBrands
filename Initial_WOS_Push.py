@@ -37,7 +37,7 @@ def main():
                 msg = ' The forecast dictionary for %s %s is empty. Skipping WOS push' \
                       % (site_product_obj.site.name, site_product_obj.product.name)
                 debug_obj.trace(med, msg)
-                utilities_LBrands.log_error("".join(['Info:',msg]))
+                utilities_LBrands.log_error("".join(['Info:', msg]))
                 empty_dict = True
                 validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
                                         empty_dict, '', '', '', '', '', '', '', '', '', '']
@@ -66,9 +66,9 @@ def main():
             # if the wos_order_quantity = 0.0, skip this site product
             if wos_order_quantity == 0.0:
                 msg = ' The calculated WOS push quantity for %s %s was 0.0 units. Skipping WOS push' \
-                % (site_product_obj.site.name, site_product_obj.product.name)
+                      % (site_product_obj.site.name, site_product_obj.product.name)
                 debug_obj.trace(med, msg)
-                utilities_LBrands.log_error("".join(['Info:',msg]))
+                utilities_LBrands.log_error("".join(['Info:', msg]))
                 validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
                                         empty_dict, first_snapshot_date, first_forecast, target_wos, forecast_quantity,
                                         sum(forecast_quantity),

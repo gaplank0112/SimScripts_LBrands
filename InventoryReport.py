@@ -6,7 +6,7 @@ import sim_server
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
 import IP_LBrands
 
-low, med, high = 2, 5, 9
+low, med, high = 1, 5, 9  # TODO: change this back to 2, 5, 9
 debug_obj = sim_server.Debug()
 model_obj = sim_server.Model()
 
@@ -22,6 +22,7 @@ def main():
     custom_IP_list = model_obj.getcustomattribute('custom_IP_list')
 
     for site_product_obj in custom_IP_list:
+        debug_obj.trace(1, 'DELETE %s, %s' % (site_product_obj.site.name, site_product_obj.product.name))
         IP_LBrands.main(site_product_obj.site, site_product_obj.product, 0)
         daily_inventory.append(
             [sim_server.NowAsString(), site_product_obj.site.name, site_product_obj.product.name,
