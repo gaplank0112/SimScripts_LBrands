@@ -6,6 +6,7 @@ import datetime
 import sim_server
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
 from bisect import bisect
+import math
 
 low, med, high = 2, 5, 9
 debug_obj = sim_server.Debug()
@@ -31,7 +32,7 @@ def list_mean(data_list):
 
 def get_forecast_values(site_product_obj, forecast_dict, start_date, forecast_window):
     # calculate the end date as start date + forecast window
-    end_date = start_date + datetime.timedelta(days=forecast_window)
+    end_date = start_date + datetime.timedelta(days=math.ceil(forecast_window))
 
     # get the list of dates in the dictionary (keys) and then collect the dates between start and end
     date_keys = forecast_dict.keys()
@@ -42,7 +43,7 @@ def get_forecast_values(site_product_obj, forecast_dict, start_date, forecast_wi
     end_index = get_index(date_keys, end_date, 'end')
     # debug_obj.trace(1, 'DELETE here 02-C')
 
-    date_list = date_keys[start_index:end_index + 1]
+    date_list = date_keys[start_index:end_index]
     # debug_obj.trace(1, 'DELETE start idx %s, end idx %s, date_list:' % (start_index, end_index))
     # debug_obj.trace(1, 'DELETE %s' % date_list)
     # debug_obj.trace(1, '%s, %s, %s, %s, %s, %s, %s, %s' % (sim_server.NowAsString(), site_product_obj.site.name,
@@ -154,8 +155,6 @@ def get_snapshot_forecast(site_product_obj, snapshot_date):
 def get_index(date_list, find_date, find_type):
     # debug_obj.trace(1, 'DELETE start_date %s, find_type %s, date_keys: ' % (find_date, find_type))
     # debug_obj.trace(1, 'DELETE %s' % date_list)
-    if find_type == 'end':
-        find_date = find_date + datetime.timedelta(days=1) # this will allows to include any values on the end date
     if find_date in date_list:
         # debug_obj.trace(1, 'DELETE found - in data list')
         index = date_list.index(find_date)

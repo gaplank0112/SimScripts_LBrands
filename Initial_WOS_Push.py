@@ -53,7 +53,6 @@ def main():
             # get the target WOS and multiply by 7 (WOS is assumed to be in weeks).
             # sum the forecasted values from the first forecast date to first forecast date + wos days. round up.
             target_wos = float(site_product_obj.getcustomattribute('target_WOS')) * 7.0
-            target_wos -= 1.0
             # debug_obj.trace(1, 'DELETE here 01')
             forecast_dict = utilities_LBrands.get_snapshot_forecast(site_product_obj, first_snapshot_date)
             # debug_obj.trace(1, 'DELETE here 02')
