@@ -137,7 +137,7 @@ def main():
 
 def get_model_folder():
     input_data = model_obj.modelpath
-    for i in range(2):
+    for i in range(3):
         a = input_data.rfind('\\')
         input_data = input_data[:a]
     return input_data
@@ -400,7 +400,12 @@ def check_datafile(filepath, mode, variable_name):
 def check_relative_path(datafile):
     if '..\\' in datafile:  # the user entered a relative path starting from the model location:
         datafile = str.replace(datafile, '..', '')
-        return model_obj.getcustomattribute('model_folder') + datafile
+        # strip out the folder name of the model to get to the location of the model
+        model_folder = model_obj.getcustomattribute('model_folder')
+        a = model_folder.rfind('\\')
+        model_folder = model_folder[:a]
+
+        return model_folder + datafile
     else:
         return datafile
 
