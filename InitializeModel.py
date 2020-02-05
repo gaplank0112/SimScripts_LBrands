@@ -117,6 +117,7 @@ def main():
     # apply the custom data dictionaries
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
+            # debug_obj.trace(low, "SiteProd - %s, %s" % (site_product_obj.site.name, site_product_obj.product.name))
             apply_site_product_data('forecast_dict', site_product_obj, global_forecast_dict)
             apply_site_product_data('end_state_probability', site_product_obj, end_state_override)
             apply_site_product_data('service_level', site_product_obj, service_level_override)
@@ -146,6 +147,17 @@ def get_lead_time(site_product_obj, lead_times_dict):
     # this only works for locations that are not make sites. We will need something else for them
     if site_product_obj.sourcingpolicy >= 12:
         return 0.0, 0.0
+
+    destination_name = site_product_obj.site.name
+
+    try:
+        source_name = site_product_obj.sources[0].name
+    except:
+        return 0.0, 0.0
+
+    if source_name.find(destination_name) >= 0:
+        debug_obj.trace(med, '----- Dest name in Source name')
+        return  0.0, 0.0
 
     for source_obj in site_product_obj.sources:
         source_name = source_obj.sourcesite.name
