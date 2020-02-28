@@ -5,6 +5,8 @@ import sys
 import datetime
 import sim_server
 sys.path.append("C:\\Python26\\SCG_64\\Lib")
+from bisect import bisect
+import math
 
 low, med, high = 2, 5, 9
 debug_obj = sim_server.Debug()
@@ -28,46 +30,33 @@ def list_mean(data_list):
     return sum(data_list) / len(data_list)
 
 
-def get_forecast_values(site_name, product_name, snapshot_date, start_date, forecast_window):
-    # get the site_product
-    site_obj = get_site(site_name)
-    site_product_obj = site_obj.getsiteproduct(product_name)
-
+def get_forecast_values(site_product_obj, forecast_dict, start_date, forecast_window):
     # calculate the end date as start date + forecast window
-    end_date = start_date + datetime.timedelta(days=forecast_window)
-
-    # get the forecast_dict for the site_product
-    forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
-
-    # find the snapshot date to match the input date (may be a range)
-    snapshot_dates = forecast_dict.keys()
-    snapshot_dates = sorted(snapshot_dates)
-    forecast_snapshot_dt = snapshot_dates[-1] # by default, we pick the forecast from the last snapshot date
-
-    for n in range(1,len(snapshot_dates)):
-        if snapshot_dates[n-1] <= snapshot_date < snapshot_dates[n]:
-            forecast_snapshot_dt = snapshot_dates[n-1]
-            break
-
-    # get the forecast values for the given snapshot date
-    try:
-        forecast_dict = forecast_dict[forecast_snapshot_dt]
-    except:
-        msg = 'No forecast found for site %s product %s snapshot date %s' % (site_name, product_name,
-                                                                             forecast_snapshot_dt)
-        debug_obj.trace(low, msg)
-        log_error(msg)
+    end_date = start_date + datetime.timedelta(days=math.ceil(forecast_window))
 
     # get the list of dates in the dictionary (keys) and then collect the dates between start and end
-    value_list = []
     date_keys = forecast_dict.keys()
-    for n in date_keys:
-        if start_date <= n <= end_date:
-            value = forecast_dict[n]
-            value_list.append(value)
-    debug_obj.trace(1, '%s, %s, %s, %s, %s, %s' % (sim_server.NowAsString(), site_product_obj.site.name,
-                                                   site_product_obj.product.name, start_date,
-                                                   end_date, len(value_list)))
+    date_keys = sorted(date_keys)
+    # debug_obj.trace(1, 'DELETE here 02-A')
+    start_index = get_index(date_keys, start_date, 'start')
+    # debug_obj.trace(1, 'DELETE here 02-B')
+    end_index = get_index(date_keys, end_date, 'end')
+    # debug_obj.trace(1, 'DELETE here 02-C')
+
+    date_list = date_keys[start_index:end_index]
+    # debug_obj.trace(1, 'DELETE start idx %s, end idx %s, date_list:' % (start_index, end_index))
+    # debug_obj.trace(1, 'DELETE %s' % date_list)
+    # debug_obj.trace(1, '%s, %s, %s, %s, %s, %s, %s, %s' % (sim_server.NowAsString(), site_product_obj.site.name,
+    #                                                       site_product_obj.product.name, start_date, date_list[0],
+    #                                                       end_date, date_list[-1], len(date_list)),
+    #                'forecast_dates.csv')
+    value_list = []
+    for n in date_list:
+        value_list.append(forecast_dict[n])
+    # debug_obj.trace(1, 'DELETE here 02-D')
+    # debug_obj.trace(1, 'DELETE value_list:')
+    # debug_obj.trace(1, 'DELETE value sum %s' % sum(value_list))
+
     return value_list
 
 
@@ -114,10 +103,72 @@ def get_datetime(dt):
         ]
         for fmt in fmts:
             try:
-                date_dict[dt] = datetime.datetime.strptime(dt,fmt)
+                date_dict[dt] = datetime.datetime.strptime(dt, fmt)
                 model_obj.setcustomattribute('date_dict', date_dict)
-                return datetime.datetime.strptime(dt,fmt)
+                return datetime.datetime.strptime(dt, fmt)
             except ValueError:
                 pass
 
-    return datetime.datetime(1970,1,1)
+    return datetime.datetime(1970, 1, 1)
+
+
+def get_snapshot_forecast(site_product_obj, snapshot_date):
+    """
+    This method loops through the list of possible forecast snapshots for a site-product and finds the closest
+    :param site_product_obj:
+    :param snapshot_date:
+    :return: the forecast dictionary associated with the given snapshot date
+    """
+
+    # get the forecast_dict for the site_product
+    forecast_dict = site_product_obj.getcustomattribute('forecast_dict')
+    # debug_obj.trace(1, 'DELETE here 01-A')
+
+    # find the snapshot date to match the input date (may be a range)
+    snapshot_dates = forecast_dict.keys()
+    snapshot_dates = sorted(snapshot_dates)
+    # debug_obj.trace(1, 'DELETE here 01-B')
+    idx = get_index(snapshot_dates, snapshot_date, 'snapshot')
+    # debug_obj.trace(1, 'DELETE here 01-C')
+    forecast_snapshot_dt = snapshot_dates[idx]
+    # debug_obj.trace(1, 'DELETE here 01-D')
+    # debug_obj.trace(1, '%s,%s,%s,%s,%s,%s,%s' %
+    #                (sim_server.NowAsString(), site_product_obj.site.name, site_product_obj.product.name,
+    #                 snapshot_date, snapshot_dates, idx, forecast_snapshot_dt),
+    #                'snapshot_dates.csv')
+    # get the forecast values for the given snapshot date
+    try:
+        forecast_dict = forecast_dict[forecast_snapshot_dt]
+        # debug_obj.trace(1, 'DELETE here 01-E_success')
+        return forecast_dict
+    except:
+        # debug_obj.trace(1, 'DELETE here 01-E_failure')
+        msg = 'No forecast found for site %s product %s snapshot date %s' % (site_product_obj.site.name,
+                                                                             site_product_obj.product.name,
+                                                                             forecast_snapshot_dt)
+        debug_obj.trace(low, msg)
+        log_error(msg)
+
+    return forecast_dict[0]
+
+
+def get_index(date_list, find_date, find_type):
+    # debug_obj.trace(1, 'DELETE start_date %s, find_type %s, date_keys: ' % (find_date, find_type))
+    # debug_obj.trace(1, 'DELETE %s' % date_list)
+    if find_date in date_list:
+        # debug_obj.trace(1, 'DELETE found - in data list')
+        index = date_list.index(find_date)
+    elif find_date > date_list[-1]:
+        # debug_obj.trace(1, 'DELETE found > index -1 = %s' % date_list[-1])
+        index = date_list.index(date_list[-1])
+    elif find_date < date_list[0]:
+        # debug_obj.trace(1, 'DELETE found < index 0 = %s' % date_list[0])
+        index = 0
+    else:
+        # debug_obj.trace(1, 'DELETE found bisect')
+        index = bisect(date_list, find_date)
+        if find_type == 'snapshot':
+            index -= 1
+        idx_type = 'bisect'
+    # debug_obj.trace(1, 'DELETE index = %s' % index)
+    return index

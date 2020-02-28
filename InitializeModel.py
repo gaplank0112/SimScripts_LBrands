@@ -9,6 +9,7 @@ __version__ = "1.0.0"
 __status__ = "Production"
 
 import sys
+import time
 import datetime
 import csv
 import sim_server
@@ -27,6 +28,7 @@ t = datetime.time
 def main():
     debug_obj.trace(low, '-'*30)
     debug_obj.trace(low, 'Initialize model called at %s' % sim_server.NowAsString())
+    start_time = time.time()
 
     # read the global variables file.
     global_variable_dict = get_gv()
@@ -47,7 +49,7 @@ def main():
     model_obj.setcustomattribute('model_folder', get_model_folder())
     model_obj.setcustomattribute('log_error', [])
     model_obj.setcustomattribute('z_score_table', add_z_score_table())
-    model_obj.setcustomattribute('date_dict',{})
+    model_obj.setcustomattribute('date_dict', {})
 
     # clear custom output files
     file_list = [
@@ -58,6 +60,7 @@ def main():
     clear_output_files(file_list)
 
     # set custom attributes on each site-product
+    custom_IP_list = []
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
             site_product_obj.setcustomattribute('forecast_dict', {})
@@ -65,8 +68,17 @@ def main():
             site_product_obj.setcustomattribute('service_level', default_service_level)
             site_product_obj.setcustomattribute('target_WOS', default_target_wos)
             site_product_obj.setcustomattribute('IP_check', True)
+
+            # build a list of site_product_objects using the scripted IP
+            # reset their sourcing policy to Source By Transfer so we don't accidently add more calendar events
+            if site_product_obj.inventorypolicy == 3:  # Custom IP policy
+                custom_IP_list.append(site_product_obj)
+                site_product_obj.sourcingpolicy = 7
+    model_obj.setcustomattribute('custom_IP_list', custom_IP_list)
+
     # create the lead time dictionary from transportation/mode times for lookup later
     lead_times_dict = get_dict_lead_times()
+
     # read in the forecast file and add to a dictionary on each site-product key=date, value=quantity
     global_forecast_dict = {}
     global_variable = 'FORECAST FILE'
@@ -105,12 +117,13 @@ def main():
     # apply the custom data dictionaries
     for site_obj in model_obj.sites:
         for site_product_obj in site_obj.products:
+            # debug_obj.trace(low, "SiteProd - %s, %s" % (site_product_obj.site.name, site_product_obj.product.name))
             apply_site_product_data('forecast_dict', site_product_obj, global_forecast_dict)
             apply_site_product_data('end_state_probability', site_product_obj, end_state_override)
             apply_site_product_data('service_level', site_product_obj, service_level_override)
             apply_site_product_data('target_WOS', site_product_obj, target_wos_override)
 
-            lead_time_mean, lead_time_stddev = get_lead_time(site_product_obj,lead_times_dict)
+            lead_time_mean, lead_time_stddev = get_lead_time(site_product_obj, lead_times_dict)
             site_product_obj.setcustomattribute('lead_time', lead_time_mean)
             site_product_obj.setcustomattribute('lead_time_stddev', lead_time_stddev)
 
@@ -119,12 +132,12 @@ def main():
             site_product_obj.setcustomattribute('first_snapshot_date', first_snapshot_date)
             site_product_obj.setcustomattribute('first_forecast_date', first_forecast_date)
 
-    debug_obj.trace(low, 'Initialize Model complete')
+    debug_obj.trace(low, 'Initialize Model complete in %s minutes' % ((time.time() - start_time)/60.0))
 
 
 def get_model_folder():
     input_data = model_obj.modelpath
-    for i in range(2):
+    for i in range(3):
         a = input_data.rfind('\\')
         input_data = input_data[:a]
     return input_data
@@ -135,7 +148,17 @@ def get_lead_time(site_product_obj, lead_times_dict):
     if site_product_obj.sourcingpolicy >= 12:
         return 0.0, 0.0
 
-    lead_times = []
+    destination_name = site_product_obj.site.name
+
+    try:
+        source_name = site_product_obj.sources[0].name
+    except:
+        return 0.0, 0.0
+
+    if source_name.find(destination_name) >= 0:
+        debug_obj.trace(med, '----- Dest name in Source name')
+        return  0.0, 0.0
+
     for source_obj in site_product_obj.sources:
         source_name = source_obj.sourcesite.name
         destination_name = site_product_obj.site.name
@@ -178,7 +201,6 @@ def get_gv():
 
 def import_forecast(global_variable, datafile):
     global_forecast_dict = {}
-    date_dict = {}
 
     # open the forecast file
     with open(datafile) as ExternalFile:
@@ -378,7 +400,12 @@ def check_datafile(filepath, mode, variable_name):
 def check_relative_path(datafile):
     if '..\\' in datafile:  # the user entered a relative path starting from the model location:
         datafile = str.replace(datafile, '..', '')
-        return model_obj.getcustomattribute('model_folder') + datafile
+        # strip out the folder name of the model to get to the location of the model
+        model_folder = model_obj.getcustomattribute('model_folder')
+        a = model_folder.rfind('\\')
+        model_folder = model_folder[:a]
+
+        return model_folder + datafile
     else:
         return datafile
 
@@ -486,4 +513,3 @@ def clear_output_files(file_list):
             f.close()
         except ValueError:
             pass
-

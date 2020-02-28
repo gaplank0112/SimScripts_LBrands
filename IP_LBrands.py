@@ -22,6 +22,7 @@ change version 1.0.5 refactored lead time lookup for scale
 __version__ = "1.0.5"
 
 import sys
+import time
 import datetime
 import math
 import sim_server
@@ -42,7 +43,6 @@ def main(site_obj, product_obj, order_quantity):
     # get the site product object. All the data is on this object
     site_product_obj = site_obj.getsiteproduct(product_obj.name)
 
-
     # if there was no forecast loaded for this site - product, skip the review
     if site_product_obj.getcustomattribute('IP_check') is False:
         debug_obj.trace(med, 'This site product %s-%s has no forecast. Skipping review'
@@ -57,7 +57,6 @@ def main(site_obj, product_obj, order_quantity):
         debug_obj.trace(med, 'The current date is less than the first forecast %s for site product %s-%s. Skipping'
                              ' review' % (first_forecast, site_product_obj.site.name, site_product_obj.product.name))
         return None
-
     # record the parameters for validation output
     current_date_dt = datetime.datetime.utcfromtimestamp(sim_server.Now())
     site_name = site_product_obj.site.name
@@ -70,35 +69,32 @@ def main(site_obj, product_obj, order_quantity):
     lead_time_stddev = float(site_product_obj.getcustomattribute('lead_time_stddev'))
     forecast_offset = lead_time
     end_state_probability = float(site_product_obj.getcustomattribute('end_state_probability'))
-    lt_demand_values = utilities_LBrands.get_forecast_values(site_name, product_name,
-                                                             current_date_dt, current_date_dt, lead_time)
+    forecast_dict = utilities_LBrands.get_snapshot_forecast(site_product_obj, current_date_dt)
+    lt_demand_values = utilities_LBrands.get_forecast_values(site_product_obj,
+                                                             forecast_dict, current_date_dt, lead_time)
     lt_forecast_demand_sum = sum(lt_demand_values)
     lt_forecast_demand_sum_effective = min(on_hand, lt_forecast_demand_sum)
-
     offset_start = current_date_dt + datetime.timedelta(days=forecast_offset)
-    lt_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name, current_date_dt,
+    lt_forecast_values = utilities_LBrands.get_forecast_values(site_product_obj, forecast_dict,
                                                                offset_start, lead_time)
     lt_forecast_sum = sum(lt_forecast_values)
     lt_forecast_mean = utilities_LBrands.list_mean(lt_forecast_values)
     lt_forecast_stddev = utilities_LBrands.list_stddev(lt_forecast_values)
 
-    rem_forecast_values = utilities_LBrands.get_forecast_values(site_name, product_name,
-                                                                current_date_dt, current_date_dt, 9999.0)
+    rem_forecast_values = utilities_LBrands.get_forecast_values(site_product_obj,
+                                                                forecast_dict, current_date_dt, 9999.0)
     rem_forecast_sum = sum(rem_forecast_values)
     rem_forecast_mean = utilities_LBrands.list_mean(rem_forecast_values)
     rem_forecast_stddev = utilities_LBrands.list_stddev(rem_forecast_values)
-
     # compute the reorder point using standard safety stock formula. Round answer to nearest integer
     service_level = float(site_product_obj.getcustomattribute('service_level'))
     z = utilities_LBrands.z_score_lookup(service_level)
     ss_raw = z * math.sqrt((lead_time_mean * rem_forecast_stddev**2) + (rem_forecast_mean * lead_time_stddev)**2)
     input_reorder_point = site_product_obj.reorderpoint
     reorder_point = max(round(ss_raw), input_reorder_point)
-
     # calculate future inventory position. Inputs: on hand, due-in, due-out, current date, forecast over lead time
     inventory_position_raw = on_hand - order_quantity + due_in - due_out - lt_forecast_demand_sum_effective
     inventory_position = round(inventory_position_raw)
-
     # replenish decision: if inventory position <= min (calc'ed reorder point) AND
     #    total remaining forecast > end state probability then
     #    trigger replenishment
@@ -134,24 +130,17 @@ def main(site_obj, product_obj, order_quantity):
     else:
         debug_obj.trace(med, ' No replenishment required at this time')
 
-    # if we are writing validation data, record it here
-    write_validation_bool = model_obj.getcustomattribute('write_validation')
-    if write_validation_bool is True:
-        validation_data_list = [sim_server.NowAsString(), site_name, product_name, on_hand, due_in, due_out,
-                                lt_forecast_demand_sum, lt_forecast_demand_sum_effective, inventory_position_raw,
-                                inventory_position, lead_time, lead_time_mean, lead_time_stddev, rem_forecast_mean,
-                                rem_forecast_stddev, service_level, z, ss_raw, input_reorder_point, reorder_point,
-                                lt_forecast_sum,
-                                rem_forecast_sum, end_state_probability, replenish_order,
-                                replenishment_quantity, order_placed]
-        record_validation(validation_data_list)
+    # record validation data
+    validation_data_list = [sim_server.NowAsString(), site_name, product_name, on_hand, due_in, due_out,
+                            lt_forecast_demand_sum, lt_forecast_demand_sum_effective, inventory_position_raw,
+                            inventory_position, lead_time, lead_time_mean, lead_time_stddev, rem_forecast_mean,
+                            rem_forecast_stddev, service_level, z, ss_raw, input_reorder_point, reorder_point,
+                            lt_forecast_sum,
+                            rem_forecast_sum, end_state_probability, replenish_order,
+                            replenishment_quantity, order_placed]
 
-    debug_obj.trace(low, 'IP_LBrands complete')
-
-
-def record_validation(data_list):
     validation_data = model_obj.getcustomattribute('validation_data')
-    if not validation_data:
+    if not validation_data:  # if this is the first time and validation data is empty, add in these headers
         validation_data.append(['date_time', 'skuloc', 'item_nbr', 'on_hand', ' due_in', ' due_out',
                                 'lt_forecast_demand_sum', 'lt_forecast_demand_sum_effective', 'inventory position raw',
                                 'inventory_position', 'lead_time',
@@ -160,8 +149,11 @@ def record_validation(data_list):
                                 'lt_forecast_sum',
                                 'rem_forecast_sum', 'end_state_probability', ' replenish_order',
                                 'replenishment_quantity', 'order_placed'])
-    validation_data.append(data_list)
+
+    validation_data.append(validation_data_list)
     model_obj.setcustomattribute('validation_data', validation_data)
+
+    debug_obj.trace(low, 'IP_LBrands complete')
 
 
 # ----------------------- Example s,S script ------------------------

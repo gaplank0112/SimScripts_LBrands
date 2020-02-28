@@ -3,6 +3,7 @@ sums and rounds up the first WOS (weeks) of forecast and sets an event on the ca
 lead time + 7 day prior to the first forecast date with a value."""
 
 import sys
+import time
 import datetime
 import math
 import sim_server
@@ -17,6 +18,7 @@ model_obj = sim_server.Model()
 def main():
     debug_obj.trace(low, '-'*30)
     debug_obj.trace(low, 'Initial WOS push called at %s' % sim_server.NowAsString())
+    start_time = time.time()
 
     # create a dictionary to hold the results by datetime. We only want to schedule one event per datetime, not
     # multiple calls on the same date.
@@ -35,7 +37,7 @@ def main():
                 msg = ' The forecast dictionary for %s %s is empty. Skipping WOS push' \
                       % (site_product_obj.site.name, site_product_obj.product.name)
                 debug_obj.trace(med, msg)
-                utilities_LBrands.log_error("".join(['Info:',msg]))
+                utilities_LBrands.log_error("".join(['Info:', msg]))
                 empty_dict = True
                 validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
                                         empty_dict, '', '', '', '', '', '', '', '', '', '']
@@ -51,17 +53,21 @@ def main():
             # get the target WOS and multiply by 7 (WOS is assumed to be in weeks).
             # sum the forecasted values from the first forecast date to first forecast date + wos days. round up.
             target_wos = float(site_product_obj.getcustomattribute('target_WOS')) * 7.0
-            target_wos -= 1.0
-            forecast_quantity = utilities_LBrands.get_forecast_values(site_obj.name, site_product_obj.product.name,
-                                                                      first_snapshot_date, first_forecast, target_wos)
+            # debug_obj.trace(1, 'DELETE here 01')
+            forecast_dict = utilities_LBrands.get_snapshot_forecast(site_product_obj, first_snapshot_date)
+            # debug_obj.trace(1, 'DELETE here 02')
+            forecast_quantity = utilities_LBrands.get_forecast_values(site_product_obj,
+                                                                      forecast_dict, first_forecast, target_wos)
+            # debug_obj.trace(1, 'DELETE here 03')
             wos_order_quantity = math.ceil(sum(forecast_quantity))
+            # debug_obj.trace(1, 'DELETE here 04')
 
             # if the wos_order_quantity = 0.0, skip this site product
             if wos_order_quantity == 0.0:
                 msg = ' The calculated WOS push quantity for %s %s was 0.0 units. Skipping WOS push' \
-                % (site_product_obj.site.name, site_product_obj.product.name)
+                      % (site_product_obj.site.name, site_product_obj.product.name)
                 debug_obj.trace(med, msg)
-                utilities_LBrands.log_error("".join(['Info:',msg]))
+                utilities_LBrands.log_error("".join(['Info:', msg]))
                 validation_data_list = [sim_server.NowAsString(), site_obj.name, site_product_obj.product.name,
                                         empty_dict, first_snapshot_date, first_forecast, target_wos, forecast_quantity,
                                         sum(forecast_quantity),
@@ -110,7 +116,7 @@ def main():
         order_date = datetime.datetime.strftime(order_date_key, '%m/%d/%Y %H:%M:%S')
         sim_server.ScheduleCustomEvent('DropOrder', order_date, [order_date_key])
 
-    debug_obj.trace(low, 'Initial WOS Push complete')
+    debug_obj.trace(low, 'Initial WOS Push complete in %s minutes' % ((time.time() - start_time)/60.0))
 
 
 def record_validation(data_list):
