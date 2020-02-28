@@ -23,7 +23,7 @@ def main():
 
     for site_product_obj in custom_IP_list:
         # debug_obj.trace(1, 'DELETE %s, %s' % (site_product_obj.site.name, site_product_obj.product.name))
-        IP_LBrands.main(site_product_obj.site, site_product_obj.product, 0)
+        # IP_LBrands.main(site_product_obj.site, site_product_obj.product, 0)
         daily_inventory.append(
             [sim_server.NowAsString(), site_product_obj.site.name, site_product_obj.product.name,
              site_product_obj.inventory])
